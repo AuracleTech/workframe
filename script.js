@@ -75,13 +75,23 @@ function init_highlight(panel) {
 	panel.art.addEventListener("pointerdown", (ev) => {
 		const { width, height } = panel.dimensions;
 		const rect = panel.highlight.getBoundingClientRect();
-		let zoom = panel.zoomLevel; // TODO : TEST ZOOM IN/OUT DURING DRAWING
+		const zoom = panel.zoomLevel; // TODO : TEST ZOOM IN/OUT DURING DRAWING
+
+		// let imageData = panel.highlight_ctx.getImageData(0, 0, width, height);
+		// let data = imageData.data;
+		// console.log(imageData);
+		// set the selection as the pixel index
 
 		let selection_format = (x, y) => {
-			x = Math.floor(x - rect.left / zoom); // This is to prevent rounding errors TODO : Test
-			y = Math.floor(y - rect.top / zoom); // This is to prevent rounding errors TODO : Test
-			x = Math.max(0, Math.min(x, width - 1)); // This is to limit the selection to the art
-			y = Math.max(0, Math.min(y, height - 1)); // This is to limit the selection to the art
+			x -= rect.left;
+			y -= rect.top;
+			x = Math.floor(x / zoom);
+			y = Math.floor(y / zoom);
+			x = Math.max(0, Math.min(width - 1, x));
+			y = Math.max(0, Math.min(height - 1, y));
+			// x = Math.max(0, Math.min(x, width * zoom - 1)); // This is to limit the selection to the art
+			// y = Math.max(0, Math.min(y, height * zoom - 1)); // This is to limit the selection to the art
+
 			return { x, y };
 		};
 
@@ -116,37 +126,36 @@ const highlight_draw = (panel) => {
 	highlight_clear(panel);
 	if (!panel.selection) return;
 
+	console.log(panel.selection); // TODO : Remove later
+
 	let ctx = panel.highlight_ctx;
 	const { start, end } = panel.selection;
+	const zoom = panel.zoomLevel;
 
-	// TODO : Replace ctx path by image data selection
+	let x1 = start.x * zoom;
+	let y1 = start.y * zoom;
+	let x2 = end.x * zoom;
+	let y2 = end.y * zoom;
 
 	ctx.beginPath();
 	ctx.setLineDash([]);
 	ctx.strokeStyle = "#ffffff";
 	ctx.lineWidth = 1;
-	ctx.moveTo(start.x + 0.5, start.y + 0.5);
-	ctx.lineTo(end.x + 0.5, start.y + 0.5);
-	ctx.lineTo(end.x + 0.5, end.y + 0.5);
-	ctx.lineTo(start.x + 0.5, end.y + 0.5);
-	ctx.lineTo(start.x + 0.5, start.y + 0.5);
+	ctx.moveTo(x1 + 0.5, y1 + 0.5);
+	ctx.lineTo(x2 + 0.5, y1 + 0.5);
+	ctx.lineTo(x2 + 0.5, y2 + 0.5);
+	ctx.lineTo(x1 + 0.5, y2 + 0.5);
+	ctx.lineTo(x1 + 0.5, y1 + 0.5);
 	ctx.stroke();
-
-	ctx.beginPath();
 	ctx.setLineDash([10, 10]);
 	ctx.strokeStyle = "#000000";
 	ctx.lineWidth = 1;
-	ctx.moveTo(start.x + 0.5, start.y + 0.5);
-	ctx.lineTo(end.x + 0.5, start.y + 0.5);
-	ctx.lineTo(end.x + 0.5, end.y + 0.5);
-	ctx.lineTo(start.x + 0.5, end.y + 0.5);
-	ctx.lineTo(start.x + 0.5, start.y + 0.5);
 	ctx.stroke();
-	ctx.closePath();
 
+	// TODO : Remove timeout
 	setTimeout(() => {
 		requestAnimationFrame(() => highlight_draw(panel));
-	}, 100);
+	}, 1000);
 };
 
 function get_all_blocks(panel) {
