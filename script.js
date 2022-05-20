@@ -67,96 +67,10 @@ function new_art(width, height, image) {
 
 	focus_layer(panel, 0);
 
-	init_highlight(panel);
+	highlight_init(panel);
 
 	return panel;
 }
-function init_highlight(panel) {
-	panel.art.addEventListener("pointerdown", (ev) => {
-		const { width, height } = panel.dimensions;
-		const rect = panel.highlight.getBoundingClientRect();
-		const zoom = panel.zoomLevel; // TODO : TEST ZOOM IN/OUT DURING DRAWING
-
-		// let imageData = panel.highlight_ctx.getImageData(0, 0, width, height);
-		// let data = imageData.data;
-		// console.log(imageData);
-		// set the selection as the pixel index
-
-		let selection_format = (x, y) => {
-			x -= rect.left;
-			y -= rect.top;
-			x = Math.floor(x / zoom);
-			y = Math.floor(y / zoom);
-			x = Math.max(0, Math.min(width - 1, x));
-			y = Math.max(0, Math.min(height - 1, y));
-			// x = Math.max(0, Math.min(x, width * zoom - 1)); // This is to limit the selection to the art
-			// y = Math.max(0, Math.min(y, height * zoom - 1)); // This is to limit the selection to the art
-
-			return { x, y };
-		};
-
-		panel.selection = {
-			start: selection_format(ev.clientX, ev.clientY),
-		};
-		panel.selection.end = panel.selection.start;
-
-		highlight_draw(panel);
-		let pointermove_action = (ev) => {
-			// TODO : Set start and end depending on zoom / panel position
-			panel.selection.end = selection_format(ev.clientX, ev.clientY);
-		};
-		let pointerup_action = () => {
-			if (panel.selection.start === panel.selection.end) panel.selection = null;
-			removeEventListener("pointermove", pointermove_action);
-			removeEventListener("pointerup", pointerup_action);
-		};
-		addEventListener("pointermove", pointermove_action);
-		addEventListener("pointerup", pointerup_action);
-	});
-}
-function highlight_clear(panel) {
-	panel.highlight_ctx.clearRect(
-		0,
-		0,
-		panel.highlight.width,
-		panel.highlight.height
-	);
-}
-const highlight_draw = (panel) => {
-	highlight_clear(panel);
-	if (!panel.selection) return;
-
-	console.log(panel.selection); // TODO : Remove later
-
-	let ctx = panel.highlight_ctx;
-	const { start, end } = panel.selection;
-	const zoom = panel.zoomLevel;
-
-	let x1 = start.x * zoom;
-	let y1 = start.y * zoom;
-	let x2 = end.x * zoom;
-	let y2 = end.y * zoom;
-
-	ctx.beginPath();
-	ctx.setLineDash([]);
-	ctx.strokeStyle = "#ffffff";
-	ctx.lineWidth = 1;
-	ctx.moveTo(x1 + 0.5, y1 + 0.5);
-	ctx.lineTo(x2 + 0.5, y1 + 0.5);
-	ctx.lineTo(x2 + 0.5, y2 + 0.5);
-	ctx.lineTo(x1 + 0.5, y2 + 0.5);
-	ctx.lineTo(x1 + 0.5, y1 + 0.5);
-	ctx.stroke();
-	ctx.setLineDash([10, 10]);
-	ctx.strokeStyle = "#000000";
-	ctx.lineWidth = 1;
-	ctx.stroke();
-
-	// TODO : Remove timeout
-	setTimeout(() => {
-		requestAnimationFrame(() => highlight_draw(panel));
-	}, 1000);
-};
 
 function get_all_blocks(panel) {
 	return panel.stack.querySelectorAll(".block");
@@ -245,7 +159,6 @@ function set_context_menu(element) {
 }
 function zoom(panel, level) {
 	panel.zoomLevel = level;
-	console.log(panel.zoomLevel); // TODO : REMOVEME
 	const { width, height } = panel.dimensions;
 	panel.background.style.width = `${width * level}px`;
 	panel.background.style.height = `${height * level}px`;
@@ -253,16 +166,19 @@ function zoom(panel, level) {
 }
 function resize_highlight(panel) {
 	let { width, height } = panel.dimensions;
+	panel.highlight.width = width; // TODO : Multiply by the zoom level
+	panel.highlight.height = height; // TODO : Multiply by the zoom level
 	width = width * panel.zoomLevel;
 	height = height * panel.zoomLevel;
 	panel.art.style.width = `${width}px`;
 	panel.art.style.height = `${height}px`;
-	panel.highlight.width = width;
-	panel.highlight.height = height;
+	panel.highlight.style.width = `${width}px`; // TODO : Multiply by the zoom level instead and remove this
+	panel.highlight.style.height = `${height}px`; // TODO : Multiply by the zoom level instead and remove this
 }
 // TODO : Multiple resize functions and algorithms
 function resize_art(panel, width, height) {
 	panel.dimensions = { width, height };
+	panel.selection = new Uint8ClampedArray(width * height * 4);
 	resize_highlight(panel);
 }
 function new_layer(panel, layer = null) {
@@ -305,6 +221,63 @@ function close_modal() {
 	let fade_screen = document.getElementById("fade_screen");
 	for (let child of fade_screen.children) child.classList.remove("active");
 	root.style.setProperty("--fade-screen", "hidden");
+}
+function selection_clear(panel) {
+	panel.selection.fill(0);
+}
+function highlight_draw(panel) {
+	const { width, height } = panel.dimensions;
+	panel.highlight_ctx.putImageData(
+		new ImageData(panel.selection, width, height),
+		0,
+		0
+	);
+}
+
+function highlight_init(panel) {
+	panel.art.addEventListener("pointerdown", (ev) => {
+		const { width, height } = panel.dimensions;
+		const rect = panel.highlight.getBoundingClientRect();
+		const zoom = panel.zoomLevel;
+		const selection_limits = (ev) => {
+			let x = Math.floor(ev.clientX - rect.left / zoom);
+			let y = Math.floor(ev.clientY - rect.top / zoom);
+			x = Math.max(0, Math.min(width, x));
+			y = Math.max(0, Math.min(height, y));
+			return { x, y };
+		};
+		const pointermove_action = (ev) => {
+			const end = selection_limits(ev);
+			selection_clear(panel);
+			for (
+				let x = Math.min(start.x, end.x);
+				x < Math.max(start.x, end.x);
+				x++
+			) {
+				for (
+					let y = Math.min(start.y, end.y);
+					y < Math.max(start.y, end.y);
+					y++
+				) {
+					// set RGB to white
+					panel.selection[(y * width + x) * 4] = 255;
+					panel.selection[(y * width + x) * 4 + 1] = 255;
+					panel.selection[(y * width + x) * 4 + 2] = 255;
+					panel.selection[(y * width + x) * 4 + 3] = 127;
+				}
+			}
+			highlight_draw(panel);
+		};
+		const pointerup_action = () => {
+			removeEventListener("pointermove", pointermove_action);
+			removeEventListener("pointerup", pointerup_action);
+		};
+		addEventListener("pointermove", pointermove_action);
+		addEventListener("pointerup", pointerup_action);
+		const start = selection_limits(ev);
+		selection_clear(panel);
+		highlight_draw(panel);
+	});
 }
 
 /* Hotkeys */
