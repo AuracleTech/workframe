@@ -52,11 +52,19 @@ function new_art(width, height, image) {
 	panel.workbench.append(panel.art);
 	panel.content.append(panel.stack, panel.workbench);
 
-	panel.art.addEventListener("wheel", art_wheel_action, { passive: false });
+	panel.art.addEventListener(
+		"wheel",
+		(ev) => {
+			ev.cancelable && ev.preventDefault();
+			let step_size = ev.deltaY / 100;
+			zoom_set(panel, Math.min(10, Math.max(1, panel.zoom + step_size)));
+		},
+		{ passive: false }
+	);
 
+	// TODO : Turn every function into event listeners (context, resize etc etc)
 	set_context_menu(panel.art);
 	resize_art(panel, width, height);
-	zoom(panel, 1);
 	new_layer(panel, gen_blank(width, height));
 	// TODO : Temporary, remove later
 	new_layer(panel, mandelbrot_set(width, height));
@@ -65,10 +73,11 @@ function new_art(width, height, image) {
 
 	if (image) new_layer(panel, new_canvas(width, height, image));
 
+	zoom_set(panel, 1);
+
 	focus_layer(panel, 0);
 
 	highlight_init(panel);
-
 	return panel;
 }
 
@@ -157,23 +166,22 @@ function set_context_menu(element) {
 		generate_context_menu(ev.clientX, ev.clientY);
 	});
 }
-function zoom(panel, level) {
-	panel.zoomLevel = level;
+function zoom_set(panel, level) {
+	panel.zoom = level;
 	const { width, height } = panel.dimensions;
-	panel.background.style.width = `${width * level}px`;
-	panel.background.style.height = `${height * level}px`;
+	panel.background.style.width = `${width * panel.zoom}px`;
+	panel.background.style.height = `${height * panel.zoom}px`;
 	resize_highlight(panel);
 }
 function resize_highlight(panel) {
-	let { width, height } = panel.dimensions;
-	panel.highlight.width = width; // TODO : Multiply by the zoom level
-	panel.highlight.height = height; // TODO : Multiply by the zoom level
-	width = width * panel.zoomLevel;
-	height = height * panel.zoomLevel;
-	panel.art.style.width = `${width}px`;
-	panel.art.style.height = `${height}px`;
-	panel.highlight.style.width = `${width}px`; // TODO : Multiply by the zoom level instead and remove this
-	panel.highlight.style.height = `${height}px`; // TODO : Multiply by the zoom level instead and remove this
+	const { width, height } = panel.dimensions;
+	panel.highlight.width = width;
+	panel.highlight.height = height;
+	panel.art.style.width = `${width * panel.zoom}px`;
+	panel.art.style.height = `${height * panel.zoom}px`;
+	panel.highlight.style.width = `${width * panel.zoom}px`;
+	panel.highlight.style.height = `${height * panel.zoom}px`;
+	highlight_draw(panel);
 }
 // TODO : Multiple resize functions and algorithms
 function resize_art(panel, width, height) {
@@ -209,14 +217,6 @@ function toggle_modal(id) {
 	element.classList.add("active");
 	root.style.setProperty("--fade-screen", "visible");
 }
-let art_wheel_action = (ev) => {
-	ev.cancelable && ev.preventDefault();
-	if (shining) {
-		let inc = ev.deltaY / 100;
-		let level = Math.min(10, Math.max(1, shining.zoomLevel + inc));
-		zoom(shining, level);
-	}
-};
 function close_modal() {
 	let fade_screen = document.getElementById("fade_screen");
 	for (let child of fade_screen.children) child.classList.remove("active");
@@ -237,11 +237,10 @@ function highlight_draw(panel) {
 function highlight_init(panel) {
 	panel.art.addEventListener("pointerdown", (ev) => {
 		const { width, height } = panel.dimensions;
-		const rect = panel.highlight.getBoundingClientRect();
-		const zoom = panel.zoomLevel;
 		const selection_limits = (ev) => {
-			let x = Math.floor(ev.clientX - rect.left / zoom);
-			let y = Math.floor(ev.clientY - rect.top / zoom);
+			const rect = panel.highlight.getBoundingClientRect();
+			let x = Math.floor((ev.clientX - rect.left) / panel.zoom);
+			let y = Math.floor((ev.clientY - rect.top) / panel.zoom);
 			x = Math.max(0, Math.min(width, x));
 			y = Math.max(0, Math.min(height, y));
 			return { x, y };
@@ -259,7 +258,7 @@ function highlight_init(panel) {
 					y < Math.max(start.y, end.y);
 					y++
 				) {
-					// set RGB to white
+					// TODO : Set panel.selection as an array of indexes instead of a uint8 array
 					panel.selection[(y * width + x) * 4] = 255;
 					panel.selection[(y * width + x) * 4 + 1] = 255;
 					panel.selection[(y * width + x) * 4 + 2] = 255;

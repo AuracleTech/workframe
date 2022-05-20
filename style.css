@@ -245,6 +245,7 @@ html {
 .panel > .content > .workbench > .art {
 	background: var(--focus-color);
 	padding: var(--art-padding);
+	cursor: crosshair;
 }
 .panel > .content > .workbench > .art > .highlight {
 	pointer-events: none;
