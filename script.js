@@ -5,27 +5,28 @@ import {
 	mandelbrot_set,
 } from "./pixelator.js";
 import { shining, new_panel } from "../../rsc/panels.js";
-var root = document.querySelector(":root");
+let root = document.querySelector(":root");
 
 const DESIRES = {
-	LAYER_NAME: {
+	GENERAL: {
+		name: "Options",
+	},
+	LAYER_NAMES: {
 		name: "Layer names",
 		default: true,
 		change: (value) =>
 			root.style.setProperty("--layer-name", value ? "block" : "none"),
 	},
-	BACKGROUND_COLOR: {
-		name: "Background",
-		default: "#151520",
-		change: (value) => root.style.setProperty("--background-color", value),
-	},
 	FOCUS_COLOR: {
-		name: "Focus",
-		default: "#0C73A0",
-		change: (value) => root.style.setProperty("--focus-color", value),
+		name: "Focus color",
+		default: "#0e75a4",
+		change: (value) => {
+			root.style.setProperty("--focus-color", value);
+			root.style.setProperty("--panel-focus-color", value);
+		},
 	},
-	ART_PADDING: {
-		name: "Art Padding",
+	PADDING: {
+		name: "Art padding",
 		default: 16,
 		range: [0, 64],
 		change: (value) => root.style.setProperty("--art-padding", `${value}px`),
@@ -281,6 +282,7 @@ function highlight_init(panel) {
 
 /* Hotkeys */
 // TODO : Assign hotkeys to the desired actions only (not global)
+// TODO : Support multiple keys simultaneously
 addEventListener("keydown", (e) => {
 	for (let action in ACTIONS)
 		for (let key of ACTIONS[action].keys)
@@ -307,13 +309,15 @@ addEventListener("load", () => {
 	for (let action in ACTIONS) {
 		if (ACTIONS[action].keys.length < 1) continue;
 		let row = document.createElement("div");
+		let text = document.createElement("div");
 		let keys = document.createElement("div");
 
 		row.className = "row";
+		text.classList = "text";
 		keys.className = "keys";
 
 		row.title = ACTIONS[action].long;
-		row.innerText = ACTIONS[action].short;
+		text.innerText = ACTIONS[action].short;
 		for (let key of ACTIONS[action].keys) {
 			let hotkey = document.createElement("div");
 			hotkey.className = "key";
@@ -321,34 +325,41 @@ addEventListener("load", () => {
 			keys.append(hotkey);
 		}
 
-		row.append(keys);
+		row.append(text, keys);
 		hotkeys_menu.append(row);
 	}
 
 	// Desires
 	let desires_menu = document.getElementById("desires_menu");
 	for (let desire in DESIRES) {
-		// Load desires
-		let value = localStorage.getItem(DESIRES[desire].name);
-		if (!value) value = DESIRES[desire].default;
-		if (typeof DESIRES[desire].default === "boolean") value = value == "true";
-		if (typeof DESIRES[desire].default === "number") value = parseInt(value);
-		DESIRES[desire].change(value);
-
-		// Desires Menu
+		// Desire Row
 		let row = document.createElement("div");
 		let text = document.createElement("div");
+
+		row.classList = "row";
+		text.classList = "text";
+		text.innerText = DESIRES[desire].name;
+
+		row.append(text);
+		desires_menu.append(row);
+
+		if (!DESIRES[desire].default) {
+			row.classList.add("category");
+			continue;
+		}
+
+		// Load desires from localStorage
+		let value = localStorage.getItem(DESIRES[desire].name);
+		if (!value) value = DESIRES[desire].default;
+		DESIRES[desire].change(value);
+
+		// Add reset button
 		let reset = document.createElement("div");
 		let element = document.createElement("input");
-
-		row.classList.add("row");
-		text.classList.add("text");
-		text.innerText = DESIRES[desire].name;
-		reset.classList.add("reset");
+		reset.classList = "reset";
 		reset.innerText = "↪";
 		if (value != DESIRES[desire].default) reset.classList.add("visible");
-
-		row.append(text, reset, element);
+		row.append(reset, element);
 
 		// Boolean -> Checkbox
 		if (typeof value == "boolean") {
@@ -402,8 +413,6 @@ addEventListener("load", () => {
 			});
 			row.append(display);
 		}
-
-		desires_menu.append(row);
 	}
 });
 
@@ -432,7 +441,7 @@ const ACTIONS = {
 		short: "Files",
 		long: "Open files",
 		func: () => {
-			var input = document.createElement("input");
+			let input = document.createElement("input");
 			input.type = "file";
 			input.multiple = true;
 			input.click();
@@ -457,7 +466,5 @@ const ACTIONS = {
 			if (shining) new_layer(shining);
 		},
 	},
-	// delete_layer: { keys: [], short: "", long: "", func: () => {} },
-	// fusion_layer: { keys: [], short: "", long: "", func: () => {} },
-	// exude_alpha: { keys: [], short: "", long: "", func: () => {} },
+	// TODO : delete_layer, fusion_layer, exude_alpha
 };
