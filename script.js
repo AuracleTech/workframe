@@ -5,7 +5,7 @@ import {
 	mandelbrot_set,
 } from "./pixelator.js";
 import { shining, new_panel } from "../../rsc/panels.js";
-let root = document.querySelector(":root");
+const root = document.querySelector(":root");
 
 const DESIRES = {
 	GENERAL: {
@@ -25,11 +25,11 @@ const DESIRES = {
 			root.style.setProperty("--panel-focus-color", value);
 		},
 	},
-	PADDING: {
-		name: "Art padding",
+	MARGIN: {
+		name: "Art margin",
 		default: 16,
 		range: [0, 64],
-		change: (value) => root.style.setProperty("--art-padding", `${value}px`),
+		change: (value) => root.style.setProperty("--art-margin", `${value}px`),
 	},
 };
 
@@ -39,23 +39,23 @@ function new_art(width, height, image) {
 	panel.stack = document.createElement("div");
 	panel.workbench = document.createElement("div");
 	panel.art = document.createElement("div");
-	panel.background = document.createElement("div");
 	panel.highlight = document.createElement("canvas");
 	panel.highlight_ctx = panel.highlight.getContext("2d");
 
 	panel.stack.classList.add("stack");
 	panel.workbench.classList.add("workbench");
 	panel.art.classList.add("art");
-	panel.background.classList.add("background");
 	panel.highlight.classList.add("highlight");
 
-	panel.art.append(panel.background, panel.highlight);
+	panel.art.append(panel.highlight);
 	panel.workbench.append(panel.art);
 	panel.content.append(panel.stack, panel.workbench);
 
-	panel.art.addEventListener(
+	panel.workbench.addEventListener(
 		"wheel",
 		(ev) => {
+			// TODO : Zoom where cursor is located
+			// TODO : Zoom out
 			ev.cancelable && ev.preventDefault();
 			let step_size = ev.deltaY / 100;
 			zoom_set(panel, Math.min(10, Math.max(1, panel.zoom + step_size)));
@@ -67,10 +67,11 @@ function new_art(width, height, image) {
 	set_context_menu(panel.art);
 	resize_art(panel, width, height);
 	new_layer(panel, gen_blank(width, height));
-	// TODO : Temporary, remove later
+
+	// TODO : Temporary, remove code block when done {
 	new_layer(panel, mandelbrot_set(width, height));
-	// TODO : Temporary, remove later
 	new_layer(panel, gen_noise(width, height));
+	// }
 
 	if (image) new_layer(panel, new_canvas(width, height, image));
 
@@ -78,7 +79,9 @@ function new_art(width, height, image) {
 
 	focus_layer(panel, 0);
 
-	highlight_init(panel);
+	panel.workbench.addEventListener("pointerdown", (ev) =>
+		highlight_init(panel, ev)
+	);
 	return panel;
 }
 
@@ -95,10 +98,9 @@ function new_block(panel, layer) {
 	title.classList.add("title");
 	card.classList.add("card");
 
-	let layer_name =
-		panel.background.children.length < 1
-			? "Background"
-			: `Layer ${panel.background.children.length}`;
+	const layer_name = "Untitled";
+	if (!panel.total_layers) panel.total_layers = 0;
+	block.uuid = panel.total_layers++;
 	block.title = layer_name;
 	title.innerText = layer_name;
 
@@ -119,17 +121,16 @@ function new_block(panel, layer) {
 
 	card_ctx.drawImage(layer, 0, 0, card.width, card.height);
 
-	// TODO : Replace the card by the whole block
 	set_context_menu(card);
 
-	let index = panel.background.children.length;
-	block.addEventListener("click", () => focus_layer(panel, index));
+	block.addEventListener("click", () => focus_layer(panel, block.uuid));
 }
-// TODO : Create function get_block to get a block from the stack
-function focus_layer(panel, index) {
-	let blocks = get_all_blocks(panel);
-	for (let block of blocks) block.classList.remove("focus");
-	blocks[blocks.length - 1 - index].classList.add("focus");
+function focus_layer(panel, uuid) {
+	const blocks = get_all_blocks(panel);
+	for (let block of blocks) {
+		block.classList.remove("focus");
+		if (block.uuid == uuid) block.classList.add("focus");
+	}
 }
 // TODO : Support custom context menu with actions names as arguments
 function generate_context_menu(x, y) {
@@ -169,17 +170,14 @@ function set_context_menu(element) {
 }
 function zoom_set(panel, level) {
 	panel.zoom = level;
-	const { width, height } = panel.dimensions;
-	panel.background.style.width = `${width * panel.zoom}px`;
-	panel.background.style.height = `${height * panel.zoom}px`;
 	resize_highlight(panel);
 }
 function resize_highlight(panel) {
 	const { width, height } = panel.dimensions;
-	panel.highlight.width = width;
-	panel.highlight.height = height;
 	panel.art.style.width = `${width * panel.zoom}px`;
 	panel.art.style.height = `${height * panel.zoom}px`;
+	panel.highlight.width = width;
+	panel.highlight.height = height;
 	panel.highlight.style.width = `${width * panel.zoom}px`;
 	panel.highlight.style.height = `${height * panel.zoom}px`;
 	highlight_draw(panel);
@@ -190,14 +188,19 @@ function resize_art(panel, width, height) {
 	panel.selection = new Uint8ClampedArray(width * height * 4);
 	resize_highlight(panel);
 }
-function new_layer(panel, layer = null) {
-	if (!layer) {
+function new_layer(panel, canvas = null) {
+	if (!canvas) {
 		const { width, height } = panel.dimensions;
-		layer = gen_blank(width, height);
+		canvas = gen_blank(width, height);
 	}
-	// TODO : Replace layer (canvas) with data (image)
-	new_block(panel, layer);
-	panel.background.append(layer);
+	new_block(panel, canvas);
+	// TODO : Replace layer (canvas) with data array (Uint8ClampedArray)
+	// let canvas = document.createElement("canvas");
+	// canvas.classList.add("layer");
+	// canvas.width = panel.dimensions.width;
+	// canvas.height = panel.dimensions.height;
+	canvas.classList.add("layer");
+	panel.art.insertBefore(canvas, panel.art.firstChild);
 }
 function change_desire(desire, value) {
 	localStorage.setItem(desire.name, value);
@@ -235,53 +238,47 @@ function highlight_draw(panel) {
 	);
 }
 
-function highlight_init(panel) {
-	panel.art.addEventListener("pointerdown", (ev) => {
-		const { width, height } = panel.dimensions;
-		const selection_limits = (ev) => {
-			const rect = panel.highlight.getBoundingClientRect();
-			let x = Math.floor((ev.clientX - rect.left) / panel.zoom);
-			let y = Math.floor((ev.clientY - rect.top) / panel.zoom);
-			x = Math.max(0, Math.min(width, x));
-			y = Math.max(0, Math.min(height, y));
-			return { x, y };
-		};
-		const pointermove_action = (ev) => {
-			const end = selection_limits(ev);
-			selection_clear(panel);
-			for (
-				let x = Math.min(start.x, end.x);
-				x < Math.max(start.x, end.x);
-				x++
-			) {
-				for (
-					let y = Math.min(start.y, end.y);
-					y < Math.max(start.y, end.y);
-					y++
-				) {
-					// TODO : Set panel.selection as an array of indexes instead of a uint8 array
-					panel.selection[(y * width + x) * 4] = 255;
-					panel.selection[(y * width + x) * 4 + 1] = 255;
-					panel.selection[(y * width + x) * 4 + 2] = 255;
-					panel.selection[(y * width + x) * 4 + 3] = 127;
-				}
-			}
-			highlight_draw(panel);
-		};
-		const pointerup_action = () => {
-			removeEventListener("pointermove", pointermove_action);
-			removeEventListener("pointerup", pointerup_action);
-		};
-		addEventListener("pointermove", pointermove_action);
-		addEventListener("pointerup", pointerup_action);
-		const start = selection_limits(ev);
+function highlight_init(panel, ev) {
+	const selection_limits = (ev) => {
+		const rect = panel.highlight.getBoundingClientRect();
+		let x = Math.floor((ev.clientX - rect.left) / panel.zoom);
+		let y = Math.floor((ev.clientY - rect.top) / panel.zoom);
+		x = Math.max(0, Math.min(panel.dimensions.width, x));
+		y = Math.max(0, Math.min(panel.dimensions.height, y));
+		return { x, y };
+	};
+	const pointermove_action = (ev) => {
+		const end = selection_limits(ev);
 		selection_clear(panel);
+		for (let x = Math.min(start.x, end.x); x < Math.max(start.x, end.x); x++) {
+			for (
+				let y = Math.min(start.y, end.y);
+				y < Math.max(start.y, end.y);
+				y++
+			) {
+				// TODO : Set panel.selection as an array of indexes instead of a uint8 array
+				panel.selection[(y * panel.dimensions.width + x) * 4] = 255;
+				panel.selection[(y * panel.dimensions.width + x) * 4 + 1] = 255;
+				panel.selection[(y * panel.dimensions.width + x) * 4 + 2] = 255;
+				panel.selection[(y * panel.dimensions.width + x) * 4 + 3] = 127;
+			}
+		}
 		highlight_draw(panel);
-	});
+	};
+	const pointerup_action = () => {
+		removeEventListener("pointermove", pointermove_action);
+		removeEventListener("pointerup", pointerup_action);
+	};
+	addEventListener("pointermove", pointermove_action);
+	addEventListener("pointerup", pointerup_action);
+	const start = selection_limits(ev);
+	selection_clear(panel);
+	highlight_draw(panel);
 }
 
 /* Hotkeys */
-// TODO : Assign hotkeys to the desired actions only (not global)
+// TODO : Assign hotkeys to the desired actions only (not on windows.addEventListener)
+// TODO : Make sure to focus the shining panel, nothing else
 // TODO : Support multiple keys simultaneously
 addEventListener("keydown", (e) => {
 	for (let action in ACTIONS)
@@ -332,7 +329,6 @@ addEventListener("load", () => {
 	// Desires
 	let desires_menu = document.getElementById("desires_menu");
 	for (let desire in DESIRES) {
-		// Desire Row
 		let row = document.createElement("div");
 		let text = document.createElement("div");
 
@@ -351,6 +347,14 @@ addEventListener("load", () => {
 		// Load desires from localStorage
 		let value = localStorage.getItem(DESIRES[desire].name);
 		if (!value) value = DESIRES[desire].default;
+		switch (typeof DESIRES[desire].default) {
+			case "number":
+				value = parseInt(value);
+				break;
+			case "boolean":
+				value = value === "true";
+				break;
+		}
 		DESIRES[desire].change(value);
 
 		// Add reset button
