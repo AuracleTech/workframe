@@ -1,0 +1,65 @@
+:root {
+	--loadingTime: 300ms;
+}
+
+@keyframes done-first {
+	from {
+		transform: translate(20%, -35%);
+	}
+	to {
+		transform: translate(0, 0);
+	}
+}
+@keyframes done-second {
+	from {
+		transform: rotate(180deg) translate(20%, -35%);
+	}
+	to {
+		transform: rotate(180deg) translate(0, 0);
+	}
+}
+#loading {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	z-index: 999;
+	opacity: 1;
+	transition: opacity var(--loadingTime);
+	transition-delay: var(--loadingTime);
+	background-color: #151520;
+	text-align: center;
+}
+#loading.done {
+	opacity: 0;
+	pointer-events: none;
+}
+#loading .logo {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 42vh;
+	height: 42vh;
+	transform: translate(-50%, -50%);
+	overflow: visible;
+}
+#loading .logo .half {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-image: url("../IMG/codehive_half.svg");
+	background-repeat: no-repeat;
+	background-size: contain;
+}
+#loading .logo .half.first {
+	transform: translate(20%, -35%);
+}
+#loading.done .logo .half.first {
+	animation: done-first var(--loadingTime) cubic-bezier(1, 0, 0, 1) forwards;
+}
+
+#loading .logo .half.second {
+	transform: rotate(180deg) translate(20%, -35%);
+}
+#loading.done .logo .half.second {
+	animation: done-second var(--loadingTime) cubic-bezier(1, 0, 0, 1) forwards;
+}

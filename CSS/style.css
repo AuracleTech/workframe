@@ -12,7 +12,8 @@
 	--art-padding: 16px;
 	--layer-name: block;
 	--focus-color: #0e75a4;
-	--unfocused-color: #38374d;
+	--stack-background: #222236;
+	--name-background: #38374d;
 
 	--context-menu: none;
 	--context-menu-left: 0px;
@@ -25,7 +26,7 @@
 	font-style: normal;
 	font-weight: 400;
 	font-display: swap;
-	src: url("../../rsc/font/Comfortaa-Regular.ttf") format("truetype");
+	src: url("../FONT/Comfortaa-Regular.ttf") format("truetype");
 }
 
 * {
@@ -203,7 +204,7 @@
 	flex-direction: column;
 	padding: 4px;
 	border-radius: 2px;
-	transform: translate(-2px, -2px);
+	transform: translate(-4px, -4px);
 	background-color: var(--context-background);
 	z-index: 999;
 }
@@ -224,19 +225,17 @@
 	display: flex;
 	flex-direction: column;
 	flex-shrink: 0;
-	width: 120px;
 	direction: rtl;
 	overflow-y: auto;
+	background-color: var(--stack-background);
 }
 .panel > .content > .stack > .block {
 	flex-shrink: 0;
-	margin: 2px auto 8px auto;
-	outline: 2px solid transparent;
-	background: var(--unfocused-color);
+	border: 4px solid transparent;
 }
 .panel > .content > .stack > .block.focus {
 	background: var(--focus-color);
-	outline: 2px solid var(--focus-color);
+	border: 4px solid var(--focus-color);
 }
 .panel > .content > .stack > .block > .card {
 	display: block;
@@ -245,15 +244,19 @@
 	height: 100px;
 	cursor: pointer;
 	image-rendering: pixelated;
-	background-image: url("../../rsc/transparency.png");
+	background-image: url("../IMG/transparency.png");
 }
-.panel > .content > .stack > .block > .title {
+.panel > .content > .stack > .block > .name {
 	display: var(--layer-name);
 	width: 100%;
 	height: 20px;
 	line-height: 20px;
 	text-align: center;
 	font-size: 12px;
+	background-color: var(--name-background);
+}
+.panel > .content > .stack > .block.focus > .name {
+	background-color: var(--focus-color);
 }
 
 /* Panel Workbench */
@@ -262,11 +265,12 @@
 	flex-grow: 1;
 	overflow: auto;
 	cursor: crosshair;
+	background: var(--workbench-background);
 }
 .panel > .content > .workbench > .art {
 	position: relative;
 	margin: var(--art-margin);
-	background-image: url("../../rsc/transparency.png");
+	background-image: url("../IMG/transparency.png");
 }
 .panel > .content > .workbench > .art > canvas {
 	position: absolute;
@@ -280,5 +284,5 @@
 
 /* Logo */
 #wall::before {
-	background-image: url("rsc/workframe_black.svg");
+	background-image: url("../IMG/workframe_black.svg");
 }

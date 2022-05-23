@@ -1,39 +1,9 @@
-import {
-	gen_noise,
-	gen_blank,
-	new_canvas,
-	mandelbrot_set,
-} from "./pixelator.js";
-import { shining, new_panel } from "../../rsc/panels.js";
+import pixelator from "./pixelator.js";
+import { shining, new_panel } from "./panels.js";
+import DESIRES from "./desires.js";
 const root = document.querySelector(":root");
 
-const DESIRES = {
-	GENERAL: {
-		name: "Options",
-	},
-	LAYER_NAMES: {
-		name: "Layer names",
-		default: true,
-		change: (value) =>
-			root.style.setProperty("--layer-name", value ? "block" : "none"),
-	},
-	FOCUS_COLOR: {
-		name: "Focus color",
-		default: "#0e75a4",
-		change: (value) => {
-			root.style.setProperty("--focus-color", value);
-			root.style.setProperty("--panel-focus-color", value);
-		},
-	},
-	MARGIN: {
-		name: "Art margin",
-		default: 16,
-		range: [0, 64],
-		change: (value) => root.style.setProperty("--art-margin", `${value}px`),
-	},
-};
-
-function new_art(width, height, image) {
+function art_new(width, height, data) {
 	let panel = new_panel();
 
 	panel.stack = document.createElement("div");
@@ -51,6 +21,8 @@ function new_art(width, height, image) {
 	panel.workbench.append(panel.art);
 	panel.content.append(panel.stack, panel.workbench);
 
+	resize_art(panel, width, height);
+
 	panel.workbench.addEventListener(
 		"wheel",
 		(ev) => {
@@ -64,81 +36,118 @@ function new_art(width, height, image) {
 	);
 
 	// TODO : Turn every function into event listeners (context, resize etc etc)
-	set_context_menu(panel.art);
-	resize_art(panel, width, height);
-	new_layer(panel, gen_blank(width, height));
+	panel.art.addEventListener("contextmenu", (ev) => {
+		ev.preventDefault();
+		// TODO : context_generate(ev.clientX, ev.clientY);
+	});
 
-	// TODO : Temporary, remove code block when done {
-	new_layer(panel, mandelbrot_set(width, height));
-	new_layer(panel, gen_noise(width, height));
-	// }
+	// TODO : Temporary
+	layer_new(panel, pixelator.mandelbrot(width, height));
+	// layer_new(panel, pixelator.noise(width, height));
 
-	if (image) new_layer(panel, new_canvas(width, height, image));
+	layer_new(panel, data);
 
 	zoom_set(panel, 1);
-
-	focus_layer(panel, 0);
 
 	panel.workbench.addEventListener("pointerdown", (ev) =>
 		highlight_init(panel, ev)
 	);
 	return panel;
 }
-
-function get_all_blocks(panel) {
-	return panel.stack.querySelectorAll(".block");
-}
-function new_block(panel, layer) {
+function new_block(panel, data, id) {
 	let block = document.createElement("div");
 	let card = document.createElement("canvas");
 	let card_ctx = card.getContext("2d");
-	let title = document.createElement("div");
+	let name = document.createElement("div");
 
 	block.classList.add("block");
-	title.classList.add("title");
+	name.classList.add("name");
 	card.classList.add("card");
 
-	const layer_name = "Untitled";
-	if (!panel.total_layers) panel.total_layers = 0;
-	block.uuid = panel.total_layers++;
-	block.title = layer_name;
-	title.innerText = layer_name;
+	block.id = `block.${id}`;
+	block.name = name;
 
-	block.append(card, title);
-	panel.stack.insertBefore(block, panel.stack.firstChild);
+	block.append(card, name);
+	panel.stack.prepend(block);
 
 	let max_allowed_size = Math.max(card.clientWidth, card.clientHeight);
-	if (layer.width > layer.height) {
+	if (panel.width > panel.height) {
+		// TODO : Make the stack display horizontally if the preview has more width than height
 		card.width = max_allowed_size;
-		card.height = Math.floor((card.width * layer.height) / layer.width);
+		card.height = Math.floor((card.width * panel.height) / panel.width);
 	} else {
 		card.height = max_allowed_size;
-		card.width = Math.floor((card.height * layer.width) / layer.height);
+		card.width = Math.floor((card.height * panel.width) / panel.height);
 	}
 
 	card.style.width = `${card.width}px`;
 	card.style.height = `${card.height}px`;
 
-	card_ctx.drawImage(layer, 0, 0, card.width, card.height);
+	card_ctx.drawImage(data, 0, 0, card.width, card.height);
 
-	set_context_menu(card);
+	card.addEventListener("contextmenu", (ev) => {
+		ev.preventDefault();
+		// TODO : generate_context_menu(ev.clientX, ev.clientY);
+	});
 
-	block.addEventListener("click", () => focus_layer(panel, block.uuid));
+	layer_rename(panel, id, "Untitled");
+
+	block.addEventListener("click", () => layer_focus(panel, id));
 }
-function focus_layer(panel, uuid) {
-	const blocks = get_all_blocks(panel);
-	for (let block of blocks) {
-		block.classList.remove("focus");
-		if (block.uuid == uuid) block.classList.add("focus");
+
+/* STACK */
+function block_get(panel, id) {
+	for (const block of panel.stack.children) {
+		if (block.id === `block.${id}`) return block;
 	}
+	console.error(`Block ${id} not found line`);
 }
+/* LAYERS */
+function layer_rename(panel, id, name) {
+	const block = block_get(panel, id);
+	block.name.innerText = name;
+	block.title = name;
+}
+function layer_focus(panel, id) {
+	for (const block of panel.stack.children) {
+		block.classList.remove("focus");
+		if (block.id === `block.${id}`) block.classList.add("focus");
+	}
+	for (const layer of panel.art.children) {
+		layer.classList.remove("focus");
+		if (layer.id === `layer.${id}`) layer.classList.add("focus");
+	}
+	panel.focus_layer = id;
+}
+function layer_new(panel, data) {
+	if (!panel.id_increment) panel.id_increment = 0;
+	const id = panel.id_increment++;
+
+	let canvas = document.createElement("canvas");
+	canvas.width = panel.width;
+	canvas.height = panel.height;
+	canvas.id = `layer.${id}`;
+	canvas.classList = "layer";
+	let ctx = canvas.getContext("2d");
+	if (data)
+		ctx.putImageData(new ImageData(data, panel.width, panel.height), 0, 0);
+	new_block(panel, canvas, id);
+	panel.art.insertBefore(canvas, panel.highlight);
+}
+function layer_remove(panel, id) {
+	let block = panel.stack.querySelector(`.focus`);
+	if (block) block.remove();
+	let layer = panel.art.querySelector(`.focus`);
+	if (layer) layer.remove();
+}
+
 // TODO : Support custom context menu with actions names as arguments
 function generate_context_menu(x, y) {
 	let context_menu = document.createElement("div");
 
 	let close_context = () => {
-		context_menu.remove();
 		root.style.setProperty("--context-menu", "none");
+		context_menu.remove();
 	};
 	let display_context = () => {
 		root.style.setProperty("--context-menu", "block");
@@ -162,45 +171,25 @@ function generate_context_menu(x, y) {
 	document.body.append(context_menu);
 	display_context();
 }
-function set_context_menu(element) {
-	element.addEventListener("contextmenu", (ev) => {
-		ev.preventDefault();
-		generate_context_menu(ev.clientX, ev.clientY);
-	});
-}
 function zoom_set(panel, level) {
 	panel.zoom = level;
 	resize_highlight(panel);
 }
 function resize_highlight(panel) {
-	const { width, height } = panel.dimensions;
-	panel.art.style.width = `${width * panel.zoom}px`;
-	panel.art.style.height = `${height * panel.zoom}px`;
-	panel.highlight.width = width;
-	panel.highlight.height = height;
-	panel.highlight.style.width = `${width * panel.zoom}px`;
-	panel.highlight.style.height = `${height * panel.zoom}px`;
+	panel.art.style.width = `${panel.width * panel.zoom}px`;
+	panel.art.style.height = `${panel.height * panel.zoom}px`;
+	panel.highlight.width = panel.width;
+	panel.highlight.height = panel.height;
+	panel.highlight.style.width = `${panel.width * panel.zoom}px`;
+	panel.highlight.style.height = `${panel.height * panel.zoom}px`;
 	highlight_draw(panel);
 }
 // TODO : Multiple resize functions and algorithms
 function resize_art(panel, width, height) {
-	panel.dimensions = { width, height };
+	panel.width = width;
+	panel.height = height;
 	panel.selection = new Uint8ClampedArray(width * height * 4);
 	resize_highlight(panel);
-}
-function new_layer(panel, canvas = null) {
-	if (!canvas) {
-		const { width, height } = panel.dimensions;
-		canvas = gen_blank(width, height);
-	}
-	new_block(panel, canvas);
-	// TODO : Replace layer (canvas) with data array (Uint8ClampedArray)
-	// let canvas = document.createElement("canvas");
-	// canvas.classList.add("layer");
-	// canvas.width = panel.dimensions.width;
-	// canvas.height = panel.dimensions.height;
-	canvas.classList.add("layer");
-	panel.art.insertBefore(canvas, panel.art.firstChild);
 }
 function change_desire(desire, value) {
 	localStorage.setItem(desire.name, value);
@@ -230,9 +219,8 @@ function selection_clear(panel) {
 	panel.selection.fill(0);
 }
 function highlight_draw(panel) {
-	const { width, height } = panel.dimensions;
 	panel.highlight_ctx.putImageData(
-		new ImageData(panel.selection, width, height),
+		new ImageData(panel.selection, panel.width, panel.height),
 		0,
 		0
 	);
@@ -243,8 +231,8 @@ function highlight_init(panel, ev) {
 		const rect = panel.highlight.getBoundingClientRect();
 		let x = Math.floor((ev.clientX - rect.left) / panel.zoom);
 		let y = Math.floor((ev.clientY - rect.top) / panel.zoom);
-		x = Math.max(0, Math.min(panel.dimensions.width, x));
-		y = Math.max(0, Math.min(panel.dimensions.height, y));
+		x = Math.max(0, Math.min(panel.width, x));
+		y = Math.max(0, Math.min(panel.height, y));
 		return { x, y };
 	};
 	const pointermove_action = (ev) => {
@@ -257,10 +245,10 @@ function highlight_init(panel, ev) {
 				y++
 			) {
 				// TODO : Set panel.selection as an array of indexes instead of a uint8 array
-				panel.selection[(y * panel.dimensions.width + x) * 4] = 255;
-				panel.selection[(y * panel.dimensions.width + x) * 4 + 1] = 255;
-				panel.selection[(y * panel.dimensions.width + x) * 4 + 2] = 255;
-				panel.selection[(y * panel.dimensions.width + x) * 4 + 3] = 127;
+				panel.selection[(y * panel.width + x) * 4] = 255;
+				panel.selection[(y * panel.width + x) * 4 + 1] = 255;
+				panel.selection[(y * panel.width + x) * 4 + 2] = 255;
+				panel.selection[(y * panel.width + x) * 4 + 3] = 127;
 			}
 		}
 		highlight_draw(panel);
@@ -292,7 +280,7 @@ addEventListener("keydown", (e) => {
 /* Initialization */
 addEventListener("load", () => {
 	// TODO : Remove, temporary
-	new_art(256, 256);
+	art_new(512, 128);
 
 	// Fade Screen
 	let fade_screen = document.getElementById("fade_screen");
@@ -437,7 +425,7 @@ const ACTIONS = {
 		keys: ["n"],
 		short: "New Art",
 		long: "Create a new panel",
-		func: () => new_art(256, 256),
+		func: () => art_new(256, 256),
 		// TODO : Custom sizes etc
 	},
 	FILES: {
@@ -455,7 +443,20 @@ const ACTIONS = {
 					reader.onload = (ev) => {
 						let image = new Image();
 						image.src = ev.target.result;
-						image.onload = () => new_art(image.width, image.height, image);
+						image.onload = () => {
+							let canvas = document.createElement("canvas");
+							let ctx = canvas.getContext("2d");
+							canvas.width = image.width;
+							canvas.height = image.height;
+							canvas.getContext("2d").drawImage(image, 0, 0);
+							let imageData = ctx.getImageData(
+								0,
+								0,
+								canvas.width,
+								canvas.height
+							);
+							art_new(image.width, image.height, imageData.data);
+						};
 					};
 					reader.readAsDataURL(file);
 				}
@@ -467,8 +468,16 @@ const ACTIONS = {
 		short: "New Layer",
 		long: "Create a new layer",
 		func: () => {
-			if (shining) new_layer(shining);
+			if (shining) layer_new(shining);
 		},
 	},
-	// TODO : delete_layer, fusion_layer, exude_alpha
+	REMOVE_LAYER: {
+		keys: ["s"],
+		short: "Remove Layer",
+		long: "Remove the current layer",
+		func: () => {
+			if (shining) layer_remove(shining);
+		},
+	},
+	// TODO : fusion_layer, exude_alpha
 };
