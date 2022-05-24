@@ -21,7 +21,7 @@ const DESIRES = {
 	MARGIN: {
 		name: "Art margin",
 		default: 16,
-		range: [0, 64],
+		range: [8, 64],
 		change: (value) => root.style.setProperty("--art-margin", `${value}px`),
 	},
 };

@@ -1,28 +1,12 @@
 class Pixelator {
 	constructor() {}
 
-	// TODO : Stop using canvas and use imageData
-	new_canvas(width, height, image) {
-		let canvas = document.createElement("canvas");
-		canvas.width = width;
-		canvas.height = height;
-		if (image) {
-			let ctx = canvas.getContext("2d");
-			ctx.drawImage(image, 0, 0);
-		}
-		return canvas;
-	}
-
 	noise(width, height) {
-		let canvas = new_canvas(width, height);
-		let ctx = canvas.getContext("2d");
-		let imgData = ctx.getImageData(0, 0, width, height);
-		let noise_ctx = imgData.data;
-		for (let i = noise_ctx.length / 2; i < noise_ctx.length; i++) {
-			noise_ctx[i] = Math.floor(Math.random() * 256);
+		let data = new Uint8ClampedArray(width * height * 4);
+		for (let i = data.length / 2; i < data.length; i++) {
+			data[i] = Math.floor(Math.random() * 256);
 		}
-		ctx.putImageData(imgData, 0, 0);
-		return canvas;
+		return data;
 	}
 
 	mandelbrot(width, height) {

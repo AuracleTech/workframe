@@ -1,5 +1,5 @@
+import { focused, new_panel } from "./panels.js";
 import pixelator from "./pixelator.js";
-import { shining, new_panel } from "./panels.js";
 import DESIRES from "./desires.js";
 const root = document.querySelector(":root");
 
@@ -20,6 +20,8 @@ function art_new(width, height, data) {
 	panel.art.append(panel.highlight);
 	panel.workbench.append(panel.art);
 	panel.content.append(panel.stack, panel.workbench);
+
+	panel.content.classList.add("draw"); // TODO : ADD THIS ONLY WHEN IN DRAWING MODE
 
 	resize_art(panel, width, height);
 
@@ -43,15 +45,21 @@ function art_new(width, height, data) {
 
 	// TODO : Temporary
 	layer_new(panel, pixelator.mandelbrot(width, height));
-	// layer_new(panel, pixelator.noise(width, height));
+	layer_new(panel, pixelator.noise(width, height));
 
 	layer_new(panel, data);
 
 	zoom_set(panel, 1);
 
-	panel.workbench.addEventListener("pointerdown", (ev) =>
-		highlight_init(panel, ev)
-	);
+	panel.workbench.addEventListener("pointerdown", (ev) => {
+		if (ev.button !== 0) return;
+		if (
+			ev.target.clientWidth < ev.offsetX ||
+			ev.target.clientHeight < ev.offsetY
+		)
+			return;
+		highlight_init(panel, ev);
+	});
 	return panel;
 }
 function new_block(panel, data, id) {
@@ -244,10 +252,6 @@ function highlight_init(panel, ev) {
 				y < Math.max(start.y, end.y);
 				y++
 			) {
-				// TODO : Set panel.selection as an array of indexes instead of a uint8 array
-				panel.selection[(y * panel.width + x) * 4] = 255;
-				panel.selection[(y * panel.width + x) * 4 + 1] = 255;
-				panel.selection[(y * panel.width + x) * 4 + 2] = 255;
 				panel.selection[(y * panel.width + x) * 4 + 3] = 127;
 			}
 		}
@@ -266,7 +270,7 @@ function highlight_init(panel, ev) {
 
 /* Hotkeys */
 // TODO : Assign hotkeys to the desired actions only (not on windows.addEventListener)
-// TODO : Make sure to focus the shining panel, nothing else
+// TODO : Make sure to focus the focused panel, nothing else
 // TODO : Support multiple keys simultaneously
 addEventListener("keydown", (e) => {
 	for (let action in ACTIONS)
@@ -406,6 +410,12 @@ addEventListener("load", () => {
 			row.append(display);
 		}
 	}
+
+	const loading = document.getElementById("loading");
+	loading.classList.add("done");
+	setTimeout(() => {
+		loading.remove();
+	}, 1500);
 });
 
 const ACTIONS = {
@@ -468,7 +478,7 @@ const ACTIONS = {
 		short: "New Layer",
 		long: "Create a new layer",
 		func: () => {
-			if (shining) layer_new(shining);
+			if (focused) layer_new(focused);
 		},
 	},
 	REMOVE_LAYER: {
@@ -476,7 +486,7 @@ const ACTIONS = {
 		short: "Remove Layer",
 		long: "Remove the current layer",
 		func: () => {
-			if (shining) layer_remove(shining);
+			if (focused) layer_remove(focused);
 		},
 	},
 	// TODO : fusion_layer, exude_alpha
