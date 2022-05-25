@@ -4,11 +4,11 @@
 	--wall-color: #151520;
 	--panel-background: #38374d;
 	--panel-outline: #1e1d2e;
-	--panel-resizing: #e6a6a3;
-	--panel-focus-color: #0e75a4;
-	--panel-min-width: 200px;
+	--panel-min-width: 120px;
 	--panel-min-height: 40px;
 	--content-background: #222236;
+	--focus-color: #0e75a4;
+	--resize-color: #d187c5;
 }
 
 body,
@@ -31,8 +31,12 @@ html,
 	background-position: center;
 }
 
-body.resizing {
+body.numb {
 	pointer-events: none;
+}
+body.numb.resizing .panel {
+	outline: 1px solid var(--resize-color);
+	background-color: var(--resize-color);
 }
 
 *::-webkit-scrollbar {
@@ -60,19 +64,13 @@ body.resizing {
 	outline: 1px solid var(--panel-outline);
 }
 .panel.focus {
-	outline: 1px solid var(--panel-focus-color);
-}
-body.resizing .panel {
-	outline: 1px solid var(--panel-resizing);
+	outline: 1px solid var(--focus-color);
 }
 .panel > .bar {
 	flex-shrink: 0;
 	display: flex;
 	height: 40px;
 	width: 100%;
-}
-.panel > .bar > .close {
-	background-image: url("../IMG/panels.png");
 }
 .panel > .bar > .close:hover {
 	background-color: #471526;
@@ -82,19 +80,19 @@ body.resizing .panel {
 	flex-grow: 1;
 }
 .panel > .bar > .resize {
-	background-image: url("../IMG/panels.png");
 	background-position: -60px 0px;
 }
-.panel > .bar > .preserve {
-	background-image: url("../IMG/panels.png");
+.panel > .bar > .alternate {
 	background-position: 0px -30px;
 }
-.panel > .bar > .preserve.restore {
-	background-image: url("../IMG/panels.png");
+.panel > .bar > .alternate.restore {
 	background-position: -30px -30px;
 }
+.panel.squish > .bar > .resize,
+.panel.squish > .bar > .alternate {
+	display: none;
+}
 .panel > .bar > .squish {
-	background-image: url("../IMG/panels.png");
 	background-position: 0px -60px;
 }
 .panel.squish > .bar > .squish {
@@ -104,8 +102,9 @@ body.resizing .panel {
 	cursor: pointer;
 	height: 40px;
 	width: 40px;
-	background-repeat: no-repeat;
 	opacity: 0.5;
+	background-repeat: no-repeat;
+	background-image: url("../IMG/panels.png");
 }
 .panel > .bar > .option:hover {
 	opacity: 1;
@@ -120,7 +119,4 @@ body.resizing .panel {
 }
 .panel.squish > .content {
 	display: none;
-}
-.panel.dragging > .content {
-	pointer-events: none;
 }

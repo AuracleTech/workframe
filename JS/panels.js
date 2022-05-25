@@ -8,75 +8,36 @@ wall.addEventListener("contextmenu", (ev) => {
 	}
 });
 
-const focus = (panel) => {
-	if (focused) {
-		focused.classList.remove("focus");
-		focused.style.zIndex = null;
-	}
-	focused = panel;
-	if (!panel) return;
-	focused.classList.add("focus");
-	focused.style.zIndex = "1";
-};
-const preserve = (panel) => {
-	// TODO : Do not force width and height like we used to do, no no no
-	panel.preserved = {
-		width: panel.clientWidth,
-		height: panel.clientHeight,
-		top: panel.offsetTop,
-		left: panel.offsetLeft,
-	};
-	panel.alternate.classList.add("restore");
-	panel.alternate.title = "Restore";
-};
-const restore = (panel) => {
-	resize(panel, panel.preserved);
-	panel.alternate.classList.remove("restore");
-	panel.alternate.title = "Preserve";
-};
-const maximize = (panel) => {
-	// TODO : Do not force width and height like we used to do, no no no
-	if (panel.maximize) return restore(panel);
-	preserve(panel);
-	resize(panel, {
-		width: wall.clientWidth,
-		height: wall.clientHeight,
-	});
-};
-const squish = (panel) => {
-	// TODO : HOTFIX REQUIRED : Bug when the panel is resized
-	// TODO : Change icon direction when active
-	// TODO : disable preserve when squished
-	panel.classList.toggle("squish");
-};
 const close = (panel, ev) => {
 	ev.stopPropagation();
 	panel.remove();
 	const next = wall.querySelector(".panel");
 	if (next) focus(next);
 };
-const alternate = (panel) => {
-	if (panel.alternate.classList.contains("restore")) return restore(panel);
-	preserve(panel);
+const grab = (panel, ev) => {
+	const y = ev.clientY - panel.offsetTop;
+	const x = ev.clientX - panel.offsetLeft;
+	const numbing = () => {
+		document.body.classList.add("numb", "grab");
+		removeEventListener("pointermove", numbing);
+	};
+	const pointermove = (ev) =>
+		reposition(panel, {
+			top: ev.clientY - y,
+			left: ev.clientX - x,
+		});
+	const pointerup = () => {
+		document.body.classList.remove("numb", "grab");
+		removeEventListener("pointermove", numbing);
+		removeEventListener("pointermove", pointermove);
+		removeEventListener("pointerup", pointerup);
+	};
+	addEventListener("pointermove", numbing);
+	addEventListener("pointermove", pointermove);
+	addEventListener("pointerup", pointerup);
 };
-const reposition = (panel, positions) => {
-	if (!positions) positions = { top: panel.offsetTop, left: panel.offsetLeft };
-	let { top, left } = positions;
-	top = Math.max(0, Math.min(top, wall.clientHeight - panel.clientHeight));
-	left = Math.max(0, Math.min(left, wall.clientWidth - panel.clientWidth));
-	panel.style.top = `${top}px`;
-	panel.style.left = `${left}px`;
-	panel.dispatchEvent(new CustomEvent("reposition", { detail: { top, left } }));
-};
-const resize = (panel, size) => {
-	const { width, height } = size;
-	panel.style.width = `${width}px`;
-	panel.style.height = `${height}px`;
-	panel.maximize = width === wall.clientWidth && height === wall.clientHeight;
-	panel.dispatchEvent(new CustomEvent("resize", { detail: { width, height } }));
-};
-const resize_click = (panel) => {
-	document.body.classList.add("resizing");
+const resizing = (panel) => {
+	document.body.classList.add("numb", "resizing");
 	const down = (ev) => {
 		const limit = (ev) => {
 			return {
@@ -101,7 +62,7 @@ const resize_click = (panel) => {
 			reposition(panel, { top, left });
 		};
 		const up = () => {
-			document.body.classList.remove("resizing");
+			document.body.classList.remove("numb", "resizing");
 			removeEventListener("pointerdown", down);
 			removeEventListener("pointermove", move);
 			removeEventListener("pointerup", up);
@@ -112,24 +73,65 @@ const resize_click = (panel) => {
 	};
 	addEventListener("pointerdown", down);
 };
-const grab = (panel, ev) => {
-	panel.classList.add("dragging");
-	const start = {
-		x: ev.clientX - panel.offsetLeft,
-		y: ev.clientY - panel.offsetTop,
-	};
-	const pointermove = (ev) =>
-		reposition(panel, {
-			top: ev.clientY - start.y,
-			left: ev.clientX - start.x,
-		});
-	const pointerup = () => {
-		panel.classList.remove("dragging");
-		document.removeEventListener("pointermove", pointermove);
-		document.removeEventListener("pointerup", pointerup);
-	};
-	document.addEventListener("pointermove", pointermove);
-	document.addEventListener("pointerup", pointerup);
+const alternate = (panel) => {
+	panel.alternate.classList.toggle("restore");
+	panel.alternate.title = panel.preserved ? "Preserve" : "Restore";
+	if (!panel.preserved)
+		panel.preserved = {
+			width: panel.clientWidth,
+			height: panel.clientHeight,
+			top: panel.offsetTop,
+			left: panel.offsetLeft,
+		};
+	else {
+		const { width, height, top, left } = panel.preserved;
+		resize(panel, { width, height });
+		// TODO : Panel.preserved restore top and left only if panel options is non resizable
+		reposition(panel, { top, left });
+		panel.preserved = null;
+	}
+};
+const squish = (panel) => {
+	if (panel.squished) {
+		resize(panel, panel.squished);
+		panel.squished = null;
+	} else {
+		panel.squished = {
+			width: panel.clientWidth,
+			height: panel.clientHeight,
+		};
+		resize(panel);
+	}
+	panel.classList.toggle("squish");
+};
+
+const focus = (panel) => {
+	if (focused) {
+		focused.classList.remove("focus");
+		focused.style.zIndex = null;
+	}
+	focused = panel;
+	if (!panel) return;
+	focused.classList.add("focus");
+	focused.style.zIndex = "1";
+};
+const maximize = (panel) => {
+	resize(panel, { width: wall.clientWidth, height: wall.clientHeight });
+};
+const reposition = (panel, positions) => {
+	if (!positions) positions = { top: panel.offsetTop, left: panel.offsetLeft };
+	let { top, left } = positions;
+	top = Math.max(0, Math.min(top, wall.clientHeight - panel.clientHeight));
+	left = Math.max(0, Math.min(left, wall.clientWidth - panel.clientWidth));
+	panel.style.top = `${top}px`;
+	panel.style.left = `${left}px`;
+	panel.dispatchEvent(new CustomEvent("reposition", { detail: { top, left } }));
+};
+const resize = (panel, size) => {
+	const { width, height } = size || {};
+	panel.style.width = width ? `${width}px` : null;
+	panel.style.height = height ? `${height}px` : null;
+	panel.dispatchEvent(new CustomEvent("resize", { detail: { width, height } }));
 };
 
 /**
@@ -140,53 +142,47 @@ const grab = (panel, ev) => {
 const new_panel = (options = { resizable: false, preservable: false }) => {
 	const { resizable, preservable } = options;
 	const panel = document.createElement("div");
+	panel.bar = document.createElement("div");
+	panel.close = document.createElement("div");
+	panel.grab = document.createElement("div");
+	panel.resize = document.createElement("div");
+	panel.alternate = document.createElement("div");
+	panel.squish = document.createElement("div");
+	panel.content = document.createElement("div");
+
+	panel.close.title = "Close";
+	panel.resize.title = "Resize";
+	panel.alternate.title = "Preserve";
+	panel.squish.title = "Squish";
+
 	panel.classList.add("panel");
+	panel.bar.classList.add("bar");
+	panel.close.classList.add("close", "option");
+	panel.grab.classList.add("grab");
+	panel.resize.classList.add("resize", "option");
+	panel.alternate.classList.add("alternate", "option");
+	panel.squish.classList.add("squish", "option");
+	panel.content.classList.add("content");
+
+	panel.bar.append(panel.close, panel.grab);
+	if (resizable) panel.bar.append(panel.resize);
+	if (preservable) panel.bar.append(panel.alternate);
+	panel.bar.append(panel.squish);
+	panel.append(panel.bar, panel.content);
+	wall.append(panel);
+
 	panel.addEventListener("pointerdown", () => focus(panel));
 	const resizeObserver = new ResizeObserver((entries) =>
 		entries.forEach((entry) => reposition(entry.target))
 	);
 	resizeObserver.observe(panel);
-
-	panel.bar = document.createElement("div");
-	panel.bar.classList.add("bar");
-	panel.append(panel.bar);
-
-	panel.close = document.createElement("div");
-	panel.close.classList.add("close", "option");
-	panel.close.title = "Close";
 	panel.close.addEventListener("pointerup", (ev) => close(panel, ev));
-	panel.bar.append(panel.close);
-
-	panel.grab = document.createElement("div");
-	panel.grab.classList.add("grab");
 	panel.grab.addEventListener("pointerdown", (ev) => grab(panel, ev));
 	if (resizable) panel.grab.addEventListener("dblclick", () => maximize(panel));
 	else panel.grab.addEventListener("dblclick", () => squish(panel));
-	panel.bar.append(panel.grab);
-
-	panel.resize = document.createElement("div");
-	panel.resize.classList.add("resize", "option");
-	panel.resize.title = "Resize";
-	panel.resize.addEventListener("click", (ev) => resize_click(panel, ev));
-	if (resizable) panel.bar.append(panel.resize);
-
-	panel.alternate = document.createElement("div");
-	panel.alternate.classList.add("preserve", "option");
-	panel.alternate.title = "Preserve";
+	panel.resize.addEventListener("click", (ev) => resizing(panel, ev));
 	panel.alternate.addEventListener("click", () => alternate(panel));
-	if (preservable) panel.bar.append(panel.alternate);
-
-	panel.squish = document.createElement("div");
-	panel.squish.classList.add("squish", "option");
-	panel.squish.title = "Squish";
 	panel.squish.addEventListener("click", () => squish(panel));
-	panel.bar.append(panel.squish);
-
-	panel.content = document.createElement("div");
-	panel.content.classList.add("content");
-	panel.append(panel.content);
-
-	wall.append(panel);
 
 	focus(panel);
 	return panel;
