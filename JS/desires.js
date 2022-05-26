@@ -1,5 +1,6 @@
 const s = document.body.style;
 
+// TODO : Get default automatically from the CSS
 export default {
 	GENERAL: {
 		name: "Options",

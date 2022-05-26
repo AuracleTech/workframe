@@ -2,7 +2,7 @@ import { focused, new_panel } from "./panels.js";
 import pixelator from "./pixelator.js";
 
 function art_new(width, height, data) {
-	let panel = new_panel();
+	const panel = new_panel();
 
 	panel.stack = document.createElement("div");
 	panel.workbench = document.createElement("div");
@@ -10,6 +10,7 @@ function art_new(width, height, data) {
 	panel.highlight = document.createElement("canvas");
 	panel.highlight_ctx = panel.highlight.getContext("2d");
 
+	panel.content.classList.add("draw"); // TODO : ADD THIS ONLY WHEN IN DRAWING MODE
 	panel.stack.classList.add("stack");
 	panel.workbench.classList.add("workbench");
 	panel.art.classList.add("art");
@@ -19,7 +20,7 @@ function art_new(width, height, data) {
 	panel.workbench.append(panel.art);
 	panel.content.append(panel.stack, panel.workbench);
 
-	panel.content.classList.add("draw"); // TODO : ADD THIS ONLY WHEN IN DRAWING MODE
+	panel.highlight_ctx.imageSmoothingEnabled = false;
 
 	resize_art(panel, width, height);
 
@@ -29,14 +30,14 @@ function art_new(width, height, data) {
 			// TODO : Zoom where cursor is located
 			// TODO : Zoom out
 			ev.cancelable && ev.preventDefault();
-			let step_size = ev.deltaY / 100;
-			zoom_set(panel, Math.min(10, Math.max(1, panel.zoom + step_size)));
+			const step_size = ev.deltaY / 100;
+			zoom_set(panel, Math.min(30, Math.max(1, panel.zoom + step_size)));
 		},
 		{ passive: false }
 	);
 
 	// TODO : Temporary
-	layer_new(panel, pixelator.mandelbrot(width, height));
+	layer_new(panel, pixelator.mandelbrot(width, height, 69));
 	layer_new(panel, pixelator.noise(width, height));
 
 	layer_new(panel, data);
@@ -59,11 +60,11 @@ function art_new(width, height, data) {
 	});
 	return panel;
 }
-function new_block(panel, data, id) {
-	let block = document.createElement("div");
-	let card = document.createElement("canvas");
-	let card_ctx = card.getContext("2d");
-	let name = document.createElement("div");
+const new_block = (panel, data, id) => {
+	const block = document.createElement("div");
+	const card = document.createElement("canvas");
+	const ctx = card.getContext("2d");
+	const name = document.createElement("div");
 
 	block.classList.add("block");
 	name.classList.add("name");
@@ -75,7 +76,7 @@ function new_block(panel, data, id) {
 	block.append(card, name);
 	panel.stack.prepend(block);
 
-	let max_allowed_size = Math.max(card.clientWidth, card.clientHeight);
+	const max_allowed_size = Math.max(card.clientWidth, card.clientHeight);
 	if (panel.width > panel.height) {
 		// TODO : Make the stack display horizontally if the preview has more width than height
 		card.width = max_allowed_size;
@@ -84,32 +85,31 @@ function new_block(panel, data, id) {
 		card.height = max_allowed_size;
 		card.width = Math.floor((card.height * panel.width) / panel.height);
 	}
-
+	ctx.imageSmoothingEnabled = false;
 	card.style.width = `${card.width}px`;
 	card.style.height = `${card.height}px`;
-
-	card_ctx.drawImage(data, 0, 0, card.width, card.height);
+	ctx.drawImage(data, 0, 0, card.width, card.height);
 
 	layer_rename(panel, id, "Untitled");
-
+	// TODO : When panel is squished every value using clientHeight/Width will be wrong - Might stop hotkeys when squished
 	block.addEventListener("click", () => layer_focus(panel, id));
 	block.addEventListener("contextmenu", generate_context);
-}
+};
 
 /* STACK */
-function block_get(panel, id) {
+const block_get = (panel, id) => {
 	for (const block of panel.stack.children) {
 		if (block.id === `block.${id}`) return block;
 	}
 	console.error(`Block ${id} not found line`);
-}
+};
 /* LAYERS */
-function layer_rename(panel, id, name) {
+const layer_rename = (panel, id, name) => {
 	const block = block_get(panel, id);
 	block.name.innerText = name;
 	block.title = name;
-}
-function layer_focus(panel, id) {
+};
+const layer_focus = (panel, id) => {
 	for (const block of panel.stack.children) {
 		block.classList.remove("focus");
 		if (block.id === `block.${id}`) block.classList.add("focus");
@@ -119,26 +119,29 @@ function layer_focus(panel, id) {
 		if (layer.id === `layer.${id}`) layer.classList.add("focus");
 	}
 	panel.focus_layer = id;
-}
-function layer_new(panel, data) {
+};
+const layer_new = (panel, data) => {
+	if (!panel) return;
 	if (!panel.id_increment) panel.id_increment = 0;
 	const id = panel.id_increment++;
 
-	let canvas = document.createElement("canvas");
+	const canvas = document.createElement("canvas");
 	canvas.width = panel.width;
 	canvas.height = panel.height;
 	canvas.id = `layer.${id}`;
 	canvas.classList = "layer";
-	let ctx = canvas.getContext("2d");
+	const ctx = canvas.getContext("2d");
+	ctx.imageSmoothingEnabled = false;
 	if (data)
 		ctx.putImageData(new ImageData(data, panel.width, panel.height), 0, 0);
 	new_block(panel, canvas, id);
 	panel.art.insertBefore(canvas, panel.highlight);
-}
-function layer_remove(panel, id) {
-	let block = panel.stack.querySelector(`.focus`);
+};
+function layer_remove(panel) {
+	if (!panel) return;
+	const block = panel.stack.querySelector(`.focus`);
 	if (block) block.remove();
-	let layer = panel.art.querySelector(`.focus`);
+	const layer = panel.art.querySelector(`.focus`);
 	if (layer) layer.remove();
 }
 
@@ -147,12 +150,12 @@ function generate_context(ev) {
 	ev.preventDefault();
 	const x = ev.clientX;
 	const y = ev.clientY;
-	let context = document.createElement("div");
+	const context = document.createElement("div");
 	context.id = "context";
 	context.style.left = `${x}px`;
 	context.style.top = `${y}px`;
-	for (let action in ACTIONS) {
-		let row = document.createElement("div");
+	for (const action in ACTIONS) {
+		const row = document.createElement("div");
 		row.className = "row";
 		row.innerText = ACTIONS[action].short;
 		row.addEventListener("click", () => {
@@ -232,22 +235,22 @@ function highlight_init(panel, ev) {
 	highlight_draw(panel);
 }
 
-function toggle_modal(id) {
-	const active_modal = document.querySelector(".modal.active");
-	const fade_screen = document.getElementById("fade_screen");
-	for (let child of fade_screen.children) child.classList.remove("active");
-	if (active_modal && active_modal.id === id) {
-		close_modal();
-		return;
-	}
-	const element = document.getElementById(id);
-	element.classList.add("active");
-	fade_screen.classList.add("active");
-}
-function close_modal() {
-	const fade_screen = document.getElementById("fade_screen");
-	for (let child of fade_screen.children) child.classList.remove("active");
-	fade_screen.classList.remove("active");
+function modal(id) {
+	const fade = document.getElementById("fade");
+	const modal = document.getElementById(id);
+	const clean = () => {
+		for (const child of fade.children) child.classList.remove("active");
+		fade.classList.remove("active");
+	};
+	if (modal.classList.contains("active")) return clean();
+	else clean();
+	fade.classList.add("active");
+	modal.classList.add("active");
+	fade.addEventListener(
+		"click",
+		(ev) => ev.target === ev.currentTarget && clean(),
+		{ once: true }
+	);
 }
 
 const ACTIONS = {
@@ -255,43 +258,41 @@ const ACTIONS = {
 		keys: ["h"],
 		short: "Hotkeys Menu",
 		long: "Toggle the hotkeys menu",
-		func: () => toggle_modal("hotkeys_menu"),
+		func: () => modal("hotkeys"),
 	},
 	DESIRES_MENU: {
 		keys: ["o"],
 		short: "Desires Menu",
 		long: "Toggle the preferences menu",
-		func: () => toggle_modal("desires_menu"),
+		func: () => modal("desires"),
 	},
 	ART_NEW: {
 		keys: ["n"],
 		short: "New Art",
 		long: "Create a new panel",
-		func: () => art_new(256, 256),
-		// TODO : Custom sizes etc
+		func: () => art_new(16, 16),
 	},
 	FILES: {
 		keys: ["f"],
 		short: "Files",
 		long: "Open files",
 		func: () => {
-			let input = document.createElement("input");
+			const input = document.createElement("input");
 			input.type = "file";
 			input.multiple = true;
-			input.click();
-			input.addEventListener("change", (ev) => {
-				for (let file of ev.target.files) {
-					let reader = new FileReader();
+			const change = (ev) => {
+				for (const file of ev.target.files) {
+					const reader = new FileReader();
 					reader.onload = (ev) => {
-						let image = new Image();
+						const image = new Image();
 						image.src = ev.target.result;
 						image.onload = () => {
-							let canvas = document.createElement("canvas");
-							let ctx = canvas.getContext("2d");
+							const canvas = document.createElement("canvas");
+							const ctx = canvas.getContext("2d");
 							canvas.width = image.width;
 							canvas.height = image.height;
 							canvas.getContext("2d").drawImage(image, 0, 0);
-							let imageData = ctx.getImageData(
+							const imageData = ctx.getImageData(
 								0,
 								0,
 								canvas.width,
@@ -302,24 +303,24 @@ const ACTIONS = {
 					};
 					reader.readAsDataURL(file);
 				}
-			});
+				input.removeEventListener("change", change);
+				input.remove();
+			};
+			input.addEventListener("change", change);
+			input.click();
 		},
 	},
 	NEW_LAYER: {
 		keys: ["l"],
 		short: "New Layer",
 		long: "Create a new layer",
-		func: () => {
-			if (focused) layer_new(focused);
-		},
+		func: () => layer_new(focused),
 	},
 	REMOVE_LAYER: {
 		keys: ["s"],
 		short: "Remove Layer",
 		long: "Remove the current layer",
-		func: () => {
-			if (focused) layer_remove(focused);
-		},
+		func: () => layer_remove(focused),
 	},
 	// TODO : fusion_layer, exude_alpha
 };

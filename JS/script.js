@@ -6,8 +6,8 @@ import ACTIONS from "./actions.js";
 // TODO : Make sure to focus the focused panel, nothing else
 // TODO : Support multiple keys simultaneously
 addEventListener("keydown", (e) => {
-	for (let action in ACTIONS)
-		for (let key of ACTIONS[action].keys)
+	for (const action in ACTIONS)
+		for (const key of ACTIONS[action].keys)
 			if (e.key == key) {
 				e.preventDefault();
 				ACTIONS[action].func();
@@ -17,20 +17,13 @@ addEventListener("keydown", (e) => {
 addEventListener("load", () => {
 	ACTIONS.ART_NEW.func();
 
-	// Fade Screen
-	let fade_screen = document.getElementById("fade_screen");
-	fade_screen.addEventListener("click", (e) => {
-		if (e.target !== e.currentTarget) return;
-		close_modal();
-	});
-
 	// Hotkeys
-	let hotkeys_menu = document.getElementById("hotkeys_menu");
-	for (let action in ACTIONS) {
+	const hotkeys = document.getElementById("hotkeys");
+	for (const action in ACTIONS) {
 		if (ACTIONS[action].keys.length < 1) continue;
-		let row = document.createElement("div");
-		let text = document.createElement("div");
-		let keys = document.createElement("div");
+		const row = document.createElement("div");
+		const text = document.createElement("div");
+		const keys = document.createElement("div");
 
 		row.className = "row";
 		text.classList = "text";
@@ -38,15 +31,15 @@ addEventListener("load", () => {
 
 		row.title = ACTIONS[action].long;
 		text.innerText = ACTIONS[action].short;
-		for (let key of ACTIONS[action].keys) {
-			let hotkey = document.createElement("div");
+		for (const key of ACTIONS[action].keys) {
+			const hotkey = document.createElement("div");
 			hotkey.className = "key";
 			hotkey.innerText = key;
 			keys.append(hotkey);
 		}
 
 		row.append(text, keys);
-		hotkeys_menu.append(row);
+		hotkeys.append(row);
 	}
 
 	// Desires
@@ -54,15 +47,15 @@ addEventListener("load", () => {
 		localStorage.setItem(desire.name, value);
 		desire.change(value);
 	};
-	const desires_menu = document.getElementById("desires_menu");
-	for (let desire in DESIRES) {
+	const desires = document.getElementById("desires");
+	for (const desire in DESIRES) {
 		const row = document.createElement("div");
 		const text = document.createElement("div");
 		row.classList = "row";
 		text.classList = "text";
 		text.innerText = DESIRES[desire].name;
 		row.append(text);
-		desires_menu.append(row);
+		desires.append(row);
 
 		if (!DESIRES[desire].default) {
 			row.classList.add("category");
@@ -83,8 +76,8 @@ addEventListener("load", () => {
 		DESIRES[desire].change(value);
 
 		// Add reset button
-		let reset = document.createElement("div");
-		let element = document.createElement("input");
+		const reset = document.createElement("div");
+		const element = document.createElement("input");
 		reset.classList = "reset";
 		reset.innerText = "↪";
 		if (value != DESIRES[desire].default) reset.classList.add("visible");
@@ -122,7 +115,7 @@ addEventListener("load", () => {
 		}
 		// Number -> Slider
 		else if (typeof value == "number") {
-			let display = document.createElement("div");
+			const display = document.createElement("div");
 			display.classList.add("display");
 			display.innerText = value;
 			element.type = "range";
@@ -146,7 +139,5 @@ addEventListener("load", () => {
 
 	const loading = document.getElementById("loading");
 	loading.classList.add("done");
-	setTimeout(() => {
-		loading.remove();
-	}, 1500);
+	setTimeout(() => loading.remove(), 1500);
 });

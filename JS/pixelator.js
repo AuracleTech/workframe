@@ -9,27 +9,26 @@ class Pixelator {
 		return data;
 	}
 
-	mandelbrot(width, height) {
-		let data = new Uint8ClampedArray(width * height * 4);
-		let data_len = data.length / 4;
-		let max_iterations = 256;
-		let x_min = -2;
-		let x_max = 1;
-		let y_min = -1;
-		let y_max = 1;
-		let x_step = (x_max - x_min) / width;
-		let y_step = (y_max - y_min) / height;
-		let x_offset = x_min;
-		let y_offset = y_min;
+	mandelbrot(width, height, max_iterations) {
+		const data = new Uint8ClampedArray(width * height * 4);
+		const data_len = data.length / 4;
+		const x_min = -2;
+		const x_max = 1;
+		const y_min = -1;
+		const y_max = 1;
+		const x_step = (x_max - x_min) / width;
+		const y_step = (y_max - y_min) / height;
+		const x_offset = x_min;
+		const y_offset = y_min;
 		for (let i = 0; i < data_len; i++) {
-			let x = x_offset + (i % width) * x_step;
-			let y = y_offset + Math.floor(i / width) * y_step;
+			const x = x_offset + (i % width) * x_step;
+			const y = y_offset + Math.floor(i / width) * y_step;
 			let a = x;
 			let b = y;
 			let iterations = 0;
 			while (iterations < max_iterations) {
-				let a_squared = a * a;
-				let b_squared = b * b;
+				const a_squared = a * a;
+				const b_squared = b * b;
 				if (a_squared + b_squared > 4) {
 					break;
 				}
