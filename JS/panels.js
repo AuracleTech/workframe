@@ -93,12 +93,19 @@ const alternate = (panel) => {
 };
 const squish = (panel) => {
 	if (panel.squished) {
-		resize(panel, panel.squished);
+		if (panel.options.resizable) resize(panel, panel.squished.size);
+		else reposition(panel, panel.squished.pos);
 		panel.squished = null;
 	} else {
 		panel.squished = {
-			width: panel.clientWidth,
-			height: panel.clientHeight,
+			size: {
+				width: panel.clientWidth,
+				height: panel.clientHeight,
+			},
+			pos: {
+				top: panel.offsetTop,
+				left: panel.offsetLeft,
+			},
 		};
 		resize(panel);
 	}
@@ -140,7 +147,6 @@ const resize = (panel, size) => {
  * options.preservable : boolean
  */
 const new_panel = (options = { resizable: false, preservable: false }) => {
-	const { resizable, preservable } = options;
 	const panel = document.createElement("div");
 	panel.bar = document.createElement("div");
 	panel.close = document.createElement("div");
@@ -149,6 +155,8 @@ const new_panel = (options = { resizable: false, preservable: false }) => {
 	panel.alternate = document.createElement("div");
 	panel.squish = document.createElement("div");
 	panel.content = document.createElement("div");
+
+	panel.options = options;
 
 	panel.close.title = "Close";
 	panel.resize.title = "Resize";
@@ -165,8 +173,8 @@ const new_panel = (options = { resizable: false, preservable: false }) => {
 	panel.content.classList.add("content");
 
 	panel.bar.append(panel.close, panel.grab);
-	if (resizable) panel.bar.append(panel.resize);
-	if (preservable) panel.bar.append(panel.alternate);
+	if (panel.options.resizable) panel.bar.append(panel.resize);
+	if (panel.options.preservable) panel.bar.append(panel.alternate);
 	panel.bar.append(panel.squish);
 	panel.append(panel.bar, panel.content);
 	wall.append(panel);
@@ -178,7 +186,8 @@ const new_panel = (options = { resizable: false, preservable: false }) => {
 	resizeObserver.observe(panel);
 	panel.close.addEventListener("pointerup", (ev) => close(panel, ev));
 	panel.grab.addEventListener("pointerdown", (ev) => grab(panel, ev));
-	if (resizable) panel.grab.addEventListener("dblclick", () => maximize(panel));
+	if (panel.options.resizable)
+		panel.grab.addEventListener("dblclick", () => maximize(panel));
 	else panel.grab.addEventListener("dblclick", () => squish(panel));
 	panel.resize.addEventListener("click", (ev) => resizing(panel, ev));
 	panel.alternate.addEventListener("click", () => alternate(panel));

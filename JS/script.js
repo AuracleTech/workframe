@@ -1,19 +1,6 @@
 import DESIRES from "./desires.js";
 import ACTIONS from "./actions.js";
 
-/* Hotkeys */
-// TODO : Assign hotkeys to the desired actions only (not on windows.addEventListener)
-// TODO : Make sure to focus the focused panel, nothing else
-// TODO : Support multiple keys simultaneously
-addEventListener("keydown", (e) => {
-	for (const action in ACTIONS)
-		for (const key of ACTIONS[action].keys)
-			if (e.key == key) {
-				e.preventDefault();
-				ACTIONS[action].func();
-			}
-});
-
 addEventListener("load", () => {
 	// load cornflower.png from folder IMG
 	const img = document.createElement("img");
@@ -27,21 +14,21 @@ addEventListener("load", () => {
 		ctx.drawImage(img, 0, 0);
 		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		const data = imageData.data;
-		ACTIONS.ART_NEW.func(16, 16, data);
+		const panel = ACTIONS.ART_NEW.func(16, 16, data);
+		ACTIONS.ZOOM.func(panel, 16);
 	};
 
 	// Hotkeys
+
 	const hotkeys = document.getElementById("hotkeys");
 	for (const action in ACTIONS) {
 		if (ACTIONS[action].keys.length < 1) continue;
 		const row = document.createElement("div");
 		const text = document.createElement("div");
 		const keys = document.createElement("div");
-
 		row.className = "row";
 		text.classList = "text";
 		keys.className = "keys";
-
 		row.title = ACTIONS[action].long;
 		text.innerText = ACTIONS[action].short;
 		for (const key of ACTIONS[action].keys) {
@@ -50,10 +37,23 @@ addEventListener("load", () => {
 			hotkey.innerText = key;
 			keys.append(hotkey);
 		}
-
 		row.append(text, keys);
 		hotkeys.append(row);
 	}
+
+	// Hotkeys Events
+	// TODO : Assign hotkeys to the desired actions only (not on windows.addEventListener)
+	// TODO : Make sure to focus the focused panel, nothing else
+	// TODO : Support multiple keys simultaneously
+
+	addEventListener("keydown", (e) => {
+		for (const action in ACTIONS)
+			for (const key of ACTIONS[action].keys)
+				if (e.key == key) {
+					e.preventDefault();
+					ACTIONS[action].func();
+				}
+	});
 
 	// Desires
 	const change_desire = (desire, value) => {
@@ -70,7 +70,7 @@ addEventListener("load", () => {
 		row.append(text);
 		desires.append(row);
 
-		if (!DESIRES[desire].default) {
+		if (DESIRES[desire].default == null) {
 			row.classList.add("category");
 			continue;
 		}

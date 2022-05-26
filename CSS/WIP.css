@@ -14,26 +14,22 @@
 	top: 75%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	font-size: 20px;
+	font-size: 22px;
 	color: #0d0d14;
 	text-transform: uppercase;
 	overflow: visible;
 }
 #INFO span {
-	font-weight: bold;
 	color: var(--focus-color);
 }
 @keyframes blink {
 	0% {
 		opacity: 0.8;
 	}
-	50% {
-		opacity: 0.2;
-	}
 	100% {
-		opacity: 0.8;
+		opacity: 0.2;
 	}
 }
 #INFO span {
-	animation: blink 5s infinite;
+	animation: blink 2s infinite alternate;
 }

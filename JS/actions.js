@@ -1,7 +1,7 @@
 import { focused, new_panel } from "./panels.js";
 import pixelator from "./pixelator.js";
 
-function art_new(width, height, data) {
+function art_new(width = 256, height = 64, data) {
 	const panel = new_panel();
 
 	panel.stack = document.createElement("div");
@@ -30,17 +30,68 @@ function art_new(width, height, data) {
 
 	layer_new(panel, data);
 
-	zoom_set(panel, 32);
+	zoom_set(panel, 1);
 
-	panel.workbench.addEventListener("pointerdown", (ev) => {
+	panel.workbench.addEventListener("pointerdown", (one) => {
 		if (
-			ev.button !== 0 ||
-			ev.target.clientWidth < ev.offsetX ||
-			ev.target.clientHeight < ev.offsetY
+			one.button !== 0 ||
+			one.target.clientWidth < one.offsetX ||
+			one.target.clientHeight < one.offsetY
 		)
 			return;
-		selection_draw(panel, ev);
+
+		const limit = ({ x, y }, floor) => {
+			const rect = panel.highlight.getBoundingClientRect();
+			x = (x - rect.left) / panel.zoom;
+			y = (y - rect.top) / panel.zoom;
+			if (floor) {
+				x = Math.floor(x);
+				y = Math.floor(y);
+			} else {
+				x = Math.ceil(x);
+				y = Math.ceil(y);
+			}
+			x = Math.max(0, Math.min(panel.width, x));
+			y = Math.max(0, Math.min(panel.height, y));
+			return { x, y };
+		};
+		const pointermove_action = (two) => {
+			const start = limit(
+				{
+					x: Math.min(one.clientX, two.clientX),
+					y: Math.min(one.clientY, two.clientY),
+				},
+				true
+			);
+			const end = limit(
+				{
+					x: Math.max(one.clientX, two.clientX),
+					y: Math.max(one.clientY, two.clientY),
+				},
+				false
+			);
+			panel.selection.fill(0);
+			for (let x = start.x; x < end.x; x++) {
+				for (let y = start.y; y < end.y; y++) {
+					panel.selection[(y * panel.width + x) * 4] = 191;
+					panel.selection[(y * panel.width + x) * 4 + 1] = 127;
+					panel.selection[(y * panel.width + x) * 4 + 2] = 31;
+					panel.selection[(x + y * panel.width) * 4 + 3] = 63;
+				}
+			}
+			highlight_draw(panel);
+		};
+		const pointerup_action = () => {
+			removeEventListener("pointermove", pointermove_action);
+			removeEventListener("pointerup", pointerup_action);
+		};
+		addEventListener("pointermove", pointermove_action);
+		addEventListener("pointerup", pointerup_action);
+		// TODO : Better animation and system overall
+		panel.selection.fill(0);
+		highlight_draw(panel);
 	});
+
 	panel.workbench.addEventListener(
 		"wheel",
 		(ev) => {
@@ -59,6 +110,7 @@ function art_new(width, height, data) {
 	return panel;
 }
 const new_block = (panel, data, id) => {
+	// TODO : Unfocus a layer by right clicking on the stack
 	const block = document.createElement("div");
 	const card = document.createElement("canvas");
 	const ctx = card.getContext("2d");
@@ -195,64 +247,6 @@ function highlight_draw(panel) {
 	);
 }
 
-function selection_draw(panel, ev) {
-	const selection_limits = (ev) => {
-		const rect = panel.highlight.getBoundingClientRect();
-		let x = Math.floor((ev.clientX - rect.left) / panel.zoom);
-		let y = Math.floor((ev.clientY - rect.top) / panel.zoom);
-		x = Math.max(0, Math.min(panel.width, x));
-		y = Math.max(0, Math.min(panel.height, y));
-		return { x, y };
-	};
-	const pointermove_action = (ev) => {
-		panel.selection.fill(0);
-		const second = selection_limits(ev);
-		const start = {
-			x: Math.min(first.x, second.x),
-			y: Math.min(first.y, second.y),
-		};
-		// TODO : Fix the +1 issue (canvas selection too big)
-		const end = {
-			x: Math.max(first.x, second.x) + 1,
-			y: Math.max(first.y, second.y) + 1,
-		};
-		for (let x = start.x; x < end.x; x++) {
-			for (let y = start.y; y < end.y; y++) {
-				panel.selection[(y * panel.width + x) * 4] = 255;
-				panel.selection[(y * panel.width + x) * 4 + 1] = 0;
-				panel.selection[(y * panel.width + x) * 4 + 2] = 0;
-				panel.selection[(x + y * panel.width) * 4 + 3] = 255;
-			}
-		}
-
-		console.log(start, end);
-
-		// for (let x = Math.min(start.x, end.x); x < Math.max(start.x, end.x); x++) {
-		// 	for (
-		// 		let y = Math.min(start.y, end.y);
-		// 		y < Math.max(start.y, end.y);
-		// 		y++
-		// 	) {
-		// 		panel.selection[(y * panel.width + x) * 4] = 255;
-		// 		panel.selection[(y * panel.width + x) * 4 + 1] = 255;
-		// 		panel.selection[(y * panel.width + x) * 4 + 2] = 255;
-		// 		panel.selection[(y * panel.width + x) * 4 + 3] = Math.random() * 55;
-		// 	}
-		// }
-		highlight_draw(panel);
-	};
-	const pointerup_action = () => {
-		removeEventListener("pointermove", pointermove_action);
-		removeEventListener("pointerup", pointerup_action);
-	};
-	addEventListener("pointermove", pointermove_action);
-	addEventListener("pointerup", pointerup_action);
-	const first = selection_limits(ev);
-	// TODO : Better animation and system overall
-	panel.selection.fill(0);
-	highlight_draw(panel);
-}
-
 function modal(id) {
 	const fade = document.getElementById("fade");
 	const modal = document.getElementById(id);
@@ -337,6 +331,12 @@ const ACTIONS = {
 		short: "Remove Layer",
 		long: "Remove the current layer",
 		func: () => layer_remove(focused),
+	},
+	ZOOM: {
+		keys: ["z"],
+		short: "Zoom",
+		long: "Zoom in or out",
+		func: (panel, level) => zoom_set(panel, level),
 	},
 	// TODO : fusion_layer, exude_alpha
 };

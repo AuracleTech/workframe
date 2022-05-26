@@ -9,7 +9,7 @@
 	--context-background: #292336;
 	--context-elements: #1f1b29;
 	--context-highlights: #aced00;
-	--art-padding: 16px;
+	--art-padding: 0px;
 	--layer-name: block;
 	--focus-color: #0e75a4;
 	--name-background: #38374d;
@@ -50,9 +50,9 @@ body {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background-color: rgba(0, 0, 0, 0.2);
-	-webkit-backdrop-filter: blur(8px);
-	backdrop-filter: blur(8px);
+	background-color: rgba(0, 0, 0, 0.4);
+	-webkit-backdrop-filter: blur(2px);
+	backdrop-filter: blur(2px);
 	z-index: 998;
 	visibility: hidden;
 }
@@ -214,14 +214,13 @@ body {
 }
 .panel > .content > .stack > .block {
 	flex-shrink: 0;
-	border: 4px solid transparent;
+	padding: 4px;
 	margin: 4px;
 	cursor: pointer;
 	background-color: var(--name-background);
 }
 .panel > .content > .stack > .block.focus {
 	background-color: var(--focus-color);
-	border: 4px solid var(--focus-color);
 }
 .panel > .content > .stack > .block > .card {
 	display: block;
@@ -261,8 +260,6 @@ body {
 	height: 100%;
 }
 .panel > .content > .workbench > .art > canvas.highlight {
-	/* TODO : Selectable mix blend mode using var CSS */
-	mix-blend-mode: soft-light;
 	cursor: crosshair;
 }
 .panel > .content.draw > .workbench > .art > .highlight {

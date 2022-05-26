@@ -17,8 +17,8 @@ export default {
 	},
 	MARGIN: {
 		name: "Art margin",
-		default: 16,
-		range: [8, 64],
+		default: 0,
+		range: [0, 64],
 		change: (value) => s.setProperty("--art-margin", `${value}px`),
 	},
 };
