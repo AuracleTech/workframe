@@ -24,6 +24,23 @@ function art_new(width, height, data) {
 
 	resize_art(panel, width, height);
 
+	// TODO : Temporary
+	// layer_new(panel, pixelator.mandelbrot(width, height, 69));
+	// layer_new(panel, pixelator.noise(width, height));
+
+	layer_new(panel, data);
+
+	zoom_set(panel, 30);
+
+	panel.workbench.addEventListener("pointerdown", (ev) => {
+		if (
+			ev.button !== 0 ||
+			ev.target.clientWidth < ev.offsetX ||
+			ev.target.clientHeight < ev.offsetY
+		)
+			return;
+		selection_draw(panel, ev);
+	});
 	panel.workbench.addEventListener(
 		"wheel",
 		(ev) => {
@@ -35,24 +52,6 @@ function art_new(width, height, data) {
 		},
 		{ passive: false }
 	);
-
-	// TODO : Temporary
-	layer_new(panel, pixelator.mandelbrot(width, height, 69));
-	layer_new(panel, pixelator.noise(width, height));
-
-	layer_new(panel, data);
-
-	zoom_set(panel, 1);
-
-	panel.workbench.addEventListener("pointerdown", (ev) => {
-		if (ev.button !== 0) return;
-		if (
-			ev.target.clientWidth < ev.offsetX ||
-			ev.target.clientHeight < ev.offsetY
-		)
-			return;
-		highlight_init(panel, ev);
-	});
 	// TODO : Turn every function into event listeners (context, resize etc etc)
 	panel.art.addEventListener("contextmenu", (ev) => {
 		ev.preventDefault();
@@ -120,6 +119,13 @@ const layer_focus = (panel, id) => {
 	}
 	panel.focus_layer = id;
 };
+function layer_remove(panel) {
+	if (!panel) return;
+	const block = panel.stack.querySelector(`.focus`);
+	if (block) block.remove();
+	const layer = panel.art.querySelector(`.focus`);
+	if (layer) layer.remove();
+}
 const layer_new = (panel, data) => {
 	if (!panel) return;
 	if (!panel.id_increment) panel.id_increment = 0;
@@ -137,13 +143,6 @@ const layer_new = (panel, data) => {
 	new_block(panel, canvas, id);
 	panel.art.insertBefore(canvas, panel.highlight);
 };
-function layer_remove(panel) {
-	if (!panel) return;
-	const block = panel.stack.querySelector(`.focus`);
-	if (block) block.remove();
-	const layer = panel.art.querySelector(`.focus`);
-	if (layer) layer.remove();
-}
 
 // TODO : Support custom context menu with actions names as arguments
 function generate_context(ev) {
@@ -189,9 +188,6 @@ function resize_art(panel, width, height) {
 	panel.selection = new Uint8ClampedArray(width * height * 4);
 	resize_highlight(panel);
 }
-function selection_clear(panel) {
-	panel.selection.fill(0);
-}
 function highlight_draw(panel) {
 	panel.highlight_ctx.putImageData(
 		new ImageData(panel.selection, panel.width, panel.height),
@@ -200,7 +196,7 @@ function highlight_draw(panel) {
 	);
 }
 
-function highlight_init(panel, ev) {
+function selection_draw(panel, ev) {
 	// TODO : Make sure the clicked pixels are selected (Inclusive not exclusive)
 	const selection_limits = (ev) => {
 		const rect = panel.highlight.getBoundingClientRect();
@@ -212,7 +208,7 @@ function highlight_init(panel, ev) {
 	};
 	const pointermove_action = (ev) => {
 		const end = selection_limits(ev);
-		selection_clear(panel);
+		panel.selection.fill(0);
 		for (let x = Math.min(start.x, end.x); x < Math.max(start.x, end.x); x++) {
 			for (
 				let y = Math.min(start.y, end.y);
@@ -222,6 +218,7 @@ function highlight_init(panel, ev) {
 				panel.selection[(y * panel.width + x) * 4 + 3] = 127;
 			}
 		}
+		console.log(start, end);
 		highlight_draw(panel);
 	};
 	const pointerup_action = () => {
@@ -231,7 +228,7 @@ function highlight_init(panel, ev) {
 	addEventListener("pointermove", pointermove_action);
 	addEventListener("pointerup", pointerup_action);
 	const start = selection_limits(ev);
-	selection_clear(panel);
+	panel.selection.fill(0);
 	highlight_draw(panel);
 }
 
@@ -246,11 +243,11 @@ function modal(id) {
 	else clean();
 	fade.classList.add("active");
 	modal.classList.add("active");
-	fade.addEventListener(
-		"click",
-		(ev) => ev.target === ev.currentTarget && clean(),
-		{ once: true }
-	);
+	const end = (ev) => {
+		if (ev.target === ev.currentTarget && clean())
+			removeEventListener("click", end);
+	};
+	fade.addEventListener("click", end);
 }
 
 const ACTIONS = {
@@ -270,7 +267,7 @@ const ACTIONS = {
 		keys: ["n"],
 		short: "New Art",
 		long: "Create a new panel",
-		func: () => art_new(16, 16),
+		func: (width, height, data) => art_new(width, height, data),
 	},
 	FILES: {
 		keys: ["f"],
@@ -303,8 +300,6 @@ const ACTIONS = {
 					};
 					reader.readAsDataURL(file);
 				}
-				input.removeEventListener("change", change);
-				input.remove();
 			};
 			input.addEventListener("change", change);
 			input.click();

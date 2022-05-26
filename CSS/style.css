@@ -3,7 +3,7 @@
 	--hotkeys-keys: #1f1b29;
 	--hotkeys-separator: #191620;
 	--desires-background: #362e23;
-	--desires-separator: #221e19;
+	--desires-category: #211d18;
 	--desires-highlights: #aced00;
 	--desires-elements: #7b6a51;
 	--context-background: #292336;
@@ -31,8 +31,6 @@
 	margin: 0;
 	border: 0;
 	outline: 0;
-	color: #ffffff;
-	font-size: 16px;
 	font-family: Comfortaa, sans-serif;
 	-webkit-user-select: none;
 	-ms-user-select: none;
@@ -41,7 +39,11 @@
 	overflow: hidden;
 }
 
-/* Fade Screen */
+body {
+	color: #ffffff;
+	font-size: 16px;
+}
+
 #fade {
 	position: fixed;
 	top: 0;
@@ -83,7 +85,7 @@
 	display: block;
 }
 
-/* Hotkeys */
+/* TODO : Fusion both models into one and use CSS root to edit colors */
 #hotkeys {
 	background-color: var(--hotkeys-background);
 }
@@ -101,7 +103,6 @@
 	background-color: var(--hotkeys-keys);
 }
 
-/* Desires */
 #desires {
 	background-color: var(--desires-background);
 }
@@ -110,15 +111,7 @@
 	line-height: 36px;
 	text-transform: uppercase;
 	text-align: center;
-	border-radius: 2px;
-	background-image: radial-gradient(
-		circle,
-		var(--desires-highlights) 0%,
-		var(--desires-elements) 100%
-	);
-}
-#desires > .row.category > .text {
-	color: var(--desires-background);
+	background-color: var(--desires-category);
 	font-size: 14px;
 }
 #desires > .row > input,
@@ -190,7 +183,6 @@
 	display: block;
 }
 
-/* Context */
 #context {
 	position: fixed;
 	display: flex;
@@ -213,7 +205,6 @@
 	background-color: var(--context-highlights);
 }
 
-/* Panel Stack */
 .panel > .content > .stack {
 	display: flex;
 	flex-direction: column;
@@ -249,7 +240,6 @@
 	font-size: 12px;
 }
 
-/* Panel Workbench */
 .panel > .content > .workbench {
 	position: relative;
 	flex-grow: 1;
@@ -277,7 +267,6 @@
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
 
-/* Logo */
 #wall::before {
 	background-image: url("../IMG/workframe_black.svg");
 }

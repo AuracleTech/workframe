@@ -1,0 +1,39 @@
+#WIP {
+	position: fixed;
+	pointer-events: none;
+	top: 25%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 34px;
+	color: #0d0d14;
+	text-transform: uppercase;
+}
+#INFO {
+	position: fixed;
+	pointer-events: none;
+	top: 75%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 20px;
+	color: #0d0d14;
+	text-transform: uppercase;
+	overflow: visible;
+}
+#INFO span {
+	font-weight: bold;
+	color: var(--focus-color);
+}
+@keyframes blink {
+	0% {
+		opacity: 0.8;
+	}
+	50% {
+		opacity: 0.2;
+	}
+	100% {
+		opacity: 0.8;
+	}
+}
+#INFO span {
+	animation: blink 5s infinite;
+}

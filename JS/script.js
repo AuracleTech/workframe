@@ -15,7 +15,20 @@ addEventListener("keydown", (e) => {
 });
 
 addEventListener("load", () => {
-	ACTIONS.ART_NEW.func();
+	// load cornflower.png from folder IMG
+	const img = document.createElement("img");
+	img.src = "IMG/cornflower.png";
+	img.onload = () => {
+		// get u8 array from image
+		const canvas = document.createElement("canvas");
+		const ctx = canvas.getContext("2d");
+		canvas.width = img.width;
+		canvas.height = img.height;
+		ctx.drawImage(img, 0, 0);
+		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		const data = imageData.data;
+		ACTIONS.ART_NEW.func(16, 16, data);
+	};
 
 	// Hotkeys
 	const hotkeys = document.getElementById("hotkeys");
