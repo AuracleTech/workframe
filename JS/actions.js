@@ -30,7 +30,7 @@ function art_new(width, height, data) {
 
 	layer_new(panel, data);
 
-	zoom_set(panel, 30);
+	zoom_set(panel, 32);
 
 	panel.workbench.addEventListener("pointerdown", (ev) => {
 		if (
@@ -45,10 +45,9 @@ function art_new(width, height, data) {
 		"wheel",
 		(ev) => {
 			// TODO : Zoom where cursor is located
-			// TODO : Zoom out
+			// TODO : Zoom out (under 1x zoom)
 			ev.cancelable && ev.preventDefault();
-			const step_size = ev.deltaY / 100;
-			zoom_set(panel, Math.min(30, Math.max(1, panel.zoom + step_size)));
+			zoom_set(panel, panel.zoom + ev.deltaY / 100);
 		},
 		{ passive: false }
 	);
@@ -95,14 +94,14 @@ const new_block = (panel, data, id) => {
 	block.addEventListener("contextmenu", generate_context);
 };
 
-/* STACK */
 const block_get = (panel, id) => {
 	for (const block of panel.stack.children) {
 		if (block.id === `block.${id}`) return block;
 	}
+	// TODO : Make errors impossible
 	console.error(`Block ${id} not found line`);
 };
-/* LAYERS */
+
 const layer_rename = (panel, id, name) => {
 	const block = block_get(panel, id);
 	block.name.innerText = name;
@@ -169,7 +168,7 @@ function generate_context(ev) {
 	document.body.append(context);
 }
 function zoom_set(panel, level) {
-	panel.zoom = level;
+	panel.zoom = Math.min(32, Math.max(1, level));
 	resize_highlight(panel);
 }
 function resize_highlight(panel) {
@@ -197,7 +196,6 @@ function highlight_draw(panel) {
 }
 
 function selection_draw(panel, ev) {
-	// TODO : Make sure the clicked pixels are selected (Inclusive not exclusive)
 	const selection_limits = (ev) => {
 		const rect = panel.highlight.getBoundingClientRect();
 		let x = Math.floor((ev.clientX - rect.left) / panel.zoom);
@@ -207,18 +205,40 @@ function selection_draw(panel, ev) {
 		return { x, y };
 	};
 	const pointermove_action = (ev) => {
-		const end = selection_limits(ev);
 		panel.selection.fill(0);
-		for (let x = Math.min(start.x, end.x); x < Math.max(start.x, end.x); x++) {
-			for (
-				let y = Math.min(start.y, end.y);
-				y < Math.max(start.y, end.y);
-				y++
-			) {
-				panel.selection[(y * panel.width + x) * 4 + 3] = 127;
+		const second = selection_limits(ev);
+		const start = {
+			x: Math.min(first.x, second.x),
+			y: Math.min(first.y, second.y),
+		};
+		// TODO : Fix the +1 issue (canvas selection too big)
+		const end = {
+			x: Math.max(first.x, second.x) + 1,
+			y: Math.max(first.y, second.y) + 1,
+		};
+		for (let x = start.x; x < end.x; x++) {
+			for (let y = start.y; y < end.y; y++) {
+				panel.selection[(y * panel.width + x) * 4] = 255;
+				panel.selection[(y * panel.width + x) * 4 + 1] = 0;
+				panel.selection[(y * panel.width + x) * 4 + 2] = 0;
+				panel.selection[(x + y * panel.width) * 4 + 3] = 255;
 			}
 		}
+
 		console.log(start, end);
+
+		// for (let x = Math.min(start.x, end.x); x < Math.max(start.x, end.x); x++) {
+		// 	for (
+		// 		let y = Math.min(start.y, end.y);
+		// 		y < Math.max(start.y, end.y);
+		// 		y++
+		// 	) {
+		// 		panel.selection[(y * panel.width + x) * 4] = 255;
+		// 		panel.selection[(y * panel.width + x) * 4 + 1] = 255;
+		// 		panel.selection[(y * panel.width + x) * 4 + 2] = 255;
+		// 		panel.selection[(y * panel.width + x) * 4 + 3] = Math.random() * 55;
+		// 	}
+		// }
 		highlight_draw(panel);
 	};
 	const pointerup_action = () => {
@@ -227,7 +247,8 @@ function selection_draw(panel, ev) {
 	};
 	addEventListener("pointermove", pointermove_action);
 	addEventListener("pointerup", pointerup_action);
-	const start = selection_limits(ev);
+	const first = selection_limits(ev);
+	// TODO : Better animation and system overall
 	panel.selection.fill(0);
 	highlight_draw(panel);
 }
