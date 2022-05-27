@@ -1,6 +1,12 @@
 import ACTIONS from "./actions.js";
 
 const HOTKEYS = {
+	PEN_MODE: {
+		WIP: true,
+		name: "Pen Mode",
+		key: "p",
+		func: () => ACTIONS.PEN_MODE(),
+	},
 	SAVE_ART: {
 		WIP: true,
 		name: "Save art",

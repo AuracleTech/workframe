@@ -1,5 +1,6 @@
-import { focused, new_panel } from "./panels.js";
+import { new_panel, wall } from "./panels.js";
 import pixelator from "./pixelator.js";
+const style = getComputedStyle(document.body);
 
 function art_new(width = 256, height = 64, data) {
 	const panel = new_panel();
@@ -10,7 +11,6 @@ function art_new(width = 256, height = 64, data) {
 	panel.highlight = document.createElement("canvas");
 	panel.highlight_ctx = panel.highlight.getContext("2d");
 
-	panel.content.classList.add("draw"); // TODO : ADD THIS ONLY WHEN IN DRAWING MODE
 	panel.stack.classList.add("stack");
 	panel.workbench.classList.add("workbench");
 	panel.art.classList.add("art");
@@ -25,10 +25,10 @@ function art_new(width = 256, height = 64, data) {
 	resize_art(panel, width, height);
 
 	// TODO : Temporary
-	// layer_new(panel, pixelator.mandelbrot(width, height, 69));
-	// layer_new(panel, pixelator.noise(width, height));
+	layer_new(pixelator.mandelbrot(width, height, 69));
+	layer_new(pixelator.noise(width, height));
 
-	layer_new(panel, data);
+	layer_new(data);
 
 	zoom_set(panel, 1);
 
@@ -110,7 +110,7 @@ function art_new(width = 256, height = 64, data) {
 	return panel;
 }
 const new_block = (panel, data, id) => {
-	// TODO : Unfocus a layer by right clicking on the stack
+	// TODO : Unfocus a layer by clicking on the same layer actively focused
 	const block = document.createElement("div");
 	const card = document.createElement("canvas");
 	const ctx = card.getContext("2d");
@@ -126,22 +126,27 @@ const new_block = (panel, data, id) => {
 	block.append(card, name);
 	panel.stack.prepend(block);
 
-	const max_allowed_size = Math.max(card.clientWidth, card.clientHeight);
-	if (panel.width > panel.height) {
-		// TODO : Make the stack display horizontally if the preview has more width than height
-		card.width = max_allowed_size;
-		card.height = Math.floor((card.width * panel.height) / panel.width);
-	} else {
-		card.height = max_allowed_size;
-		card.width = Math.floor((card.height * panel.width) / panel.height);
-	}
 	ctx.imageSmoothingEnabled = false;
-	card.style.width = `${card.width}px`;
-	card.style.height = `${card.height}px`;
+	card.width = panel.width;
+	card.height = panel.height;
+	const max_card_size = parseInt(style.getPropertyValue("--max-card-size"));
+	let width, height;
+	if (panel.width > panel.height) {
+		panel.content.classList.add("horizontal");
+		width = max_card_size;
+		height = max_card_size * (panel.height / panel.width);
+	} else {
+		panel.content.classList.remove("horizontal");
+		height = max_card_size;
+		width = max_card_size * (panel.width / panel.height);
+	}
+	card.style.width = `${width}px`;
+	card.style.height = `${height}px`;
 	ctx.drawImage(data, 0, 0, card.width, card.height);
 
 	layer_rename(panel, id, "Untitled");
-	// TODO : When panel is squished every value using clientHeight/Width will be wrong - Might stop hotkeys when squished
+	// TODO : When panel is squished every value using clientHeight/Width will be wrong
+	// TODO : Stop hotkeys working when squished
 	block.addEventListener("click", () => layer_focus(panel, id));
 	block.addEventListener("contextmenu", generate_context);
 };
@@ -170,25 +175,26 @@ const layer_focus = (panel, id) => {
 	}
 	panel.focus_layer = id;
 };
-function layer_delete(panel) {
+function layer_delete() {
+	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
 	const block = panel.stack.querySelector(`.focus`);
 	if (block) block.remove();
 	const layer = panel.art.querySelector(`.focus`);
 	if (layer) layer.remove();
 }
-const layer_new = (panel, data) => {
+const layer_new = (data) => {
+	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
 	if (!panel.id_increment) panel.id_increment = 0;
-	const id = panel.id_increment++;
-
+	const id = panel.id_increment++; // TODO : Replace by array like in wall
 	const canvas = document.createElement("canvas");
+	const ctx = canvas.getContext("2d");
+	ctx.imageSmoothingEnabled = false;
 	canvas.width = panel.width;
 	canvas.height = panel.height;
 	canvas.id = `layer.${id}`;
 	canvas.classList = "layer";
-	const ctx = canvas.getContext("2d");
-	ctx.imageSmoothingEnabled = false;
 	if (data)
 		ctx.putImageData(new ImageData(data, panel.width, panel.height), 0, 0);
 	new_block(panel, canvas, id);
@@ -281,8 +287,12 @@ const paste_clipboard = (ev) => {
 	for (const item of ev.clipboardData.items)
 		if (item.type.indexOf("image") !== -1) load(item.getAsFile());
 };
+const pen_mode = () => {
+	wall.classList.add("draw");
+};
 
 const ACTIONS = {
+	PEN_MODE: () => pen_mode(),
 	CLIPBOARD_PASTE: paste_clipboard,
 	OPEN_MODAL: (name) => modal(name),
 	ART_NEW: (width, height, data) => art_new(width, height, data),
@@ -317,8 +327,8 @@ const ACTIONS = {
 		input.addEventListener("change", change);
 		input.click();
 	},
-	NEW_LAYER: () => layer_new(focused),
-	DELETE_LAYER: () => layer_delete(focused),
+	NEW_LAYER: () => layer_new(),
+	DELETE_LAYER: () => layer_delete(),
 	ZOOM: (panel, level) => zoom_set(panel, level),
 	// TODO : fusion_layer, exude_alpha
 };

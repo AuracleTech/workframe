@@ -1,12 +1,12 @@
 const wall = document.getElementById("wall");
+wall.panels = [];
 // TODO : List panels in walls
-let focused = null;
 
 wall.addEventListener("contextmenu", (ev) => {
-	if (ev.target === ev.currentTarget) {
-		ev.preventDefault();
-		focus(null);
-	}
+	ev.target === ev.currentTarget && focus();
+});
+wall.addEventListener("pointerdown", (ev) => {
+	ev.target === ev.currentTarget && focus();
 });
 
 const close = (panel, ev) => {
@@ -114,15 +114,13 @@ const squish = (panel) => {
 };
 
 const focus = (panel) => {
-	if (focused) {
-		focused.classList.remove("focus");
-		focused.style.zIndex = null;
+	wall.panels = wall.panels.filter((p) => p !== panel);
+	wall.panels.forEach((p) => p.classList.remove("focus"));
+	if (panel) {
+		wall.panels.push(panel);
+		panel.classList.add("focus");
 	}
-	focused = panel;
-	if (!panel) return;
-	focused.classList.add("focus");
-	focused.style.zIndex = "1";
-	focused.focus();
+	wall.panels.forEach((p, i) => (p.style.zIndex = i));
 };
 const maximize = (panel) => {
 	resize(panel, { width: wall.clientWidth, height: wall.clientHeight });
@@ -199,4 +197,4 @@ const new_panel = (options = { resizable: false, preservable: false }) => {
 	return panel;
 };
 
-export { new_panel, focused };
+export { new_panel, wall };

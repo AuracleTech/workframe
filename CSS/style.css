@@ -9,6 +9,7 @@
 	--context-background: #292336;
 	--context-elements: #1f1b29;
 	--context-highlights: #aced00;
+	--max-card-size: 120px;
 	--art-padding: 4px;
 	--layer-name: block;
 	--focus-color: #0e75a4;
@@ -211,7 +212,14 @@ body {
 	flex-direction: column;
 	flex-shrink: 0;
 	direction: rtl;
-	overflow-y: auto;
+	overflow: auto;
+}
+.panel > .content.horizontal {
+	flex-direction: column;
+}
+.panel > .content.horizontal > .stack {
+	flex-direction: row;
+	direction: ltr;
 }
 .panel > .content > .stack > .block {
 	flex-shrink: 0;
@@ -246,7 +254,7 @@ body {
 	overflow: auto;
 	cursor: crosshair;
 }
-.panel > .content.draw > .workbench {
+#wall.draw > .panel > .content > .workbench {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
 .panel > .content > .workbench > .art {
@@ -263,7 +271,7 @@ body {
 .panel > .content > .workbench > .art > canvas.highlight {
 	cursor: crosshair;
 }
-.panel > .content.draw > .workbench > .art > .highlight {
+#wall.draw > .panel > .content > .workbench > .art > .highlight {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
 
