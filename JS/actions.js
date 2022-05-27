@@ -111,6 +111,7 @@ function art_new(width = 256, height = 64, data) {
 }
 const new_block = (panel, data, id) => {
 	// TODO : Unfocus a layer by clicking on the same layer actively focused
+	// TODO : Low priority -> Display only the canvas layer when hovering layers to see that layer only
 	const block = document.createElement("div");
 	const card = document.createElement("canvas");
 	const ctx = card.getContext("2d");
@@ -203,6 +204,7 @@ const layer_new = (data) => {
 
 // TODO : Support custom context menu with actions names as arguments
 function generate_context(ev) {
+	// TODO : Maybe the context could be generated using hotkeys.js, that way no custom values are needed
 	ev.preventDefault();
 	const x = ev.clientX;
 	const y = ev.clientY;
