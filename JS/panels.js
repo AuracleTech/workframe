@@ -1,4 +1,5 @@
 const wall = document.getElementById("wall");
+// TODO : List panels in walls
 let focused = null;
 
 wall.addEventListener("contextmenu", (ev) => {
@@ -121,6 +122,7 @@ const focus = (panel) => {
 	if (!panel) return;
 	focused.classList.add("focus");
 	focused.style.zIndex = "1";
+	focused.focus();
 };
 const maximize = (panel) => {
 	resize(panel, { width: wall.clientWidth, height: wall.clientHeight });

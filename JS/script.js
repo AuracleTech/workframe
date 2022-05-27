@@ -1,61 +1,53 @@
 import DESIRES from "./desires.js";
-import ACTIONS from "./actions.js";
+import HOTKEYS from "./hotkeys.js";
 
-addEventListener("load", () => {
-	// load cornflower.png from folder IMG
-	const img = document.createElement("img");
-	img.src = "IMG/cornflower.png";
-	img.onload = () => {
-		// get u8 array from image
-		const canvas = document.createElement("canvas");
-		const ctx = canvas.getContext("2d");
-		canvas.width = img.width;
-		canvas.height = img.height;
-		ctx.drawImage(img, 0, 0);
-		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		const data = imageData.data;
-		const panel = ACTIONS.ART_NEW.func(16, 16, data);
-		ACTIONS.ZOOM.func(panel, 16);
-	};
+const loading = () => {
+	const loading = document.getElementById("loading");
+	loading.classList.add("done");
+	loading.addEventListener(
+		"animationend",
+		(ev) => ev.target.parentElement == loading && loading.remove()
+	);
+};
+const hotkeys = (ev) => {
+	const shift = ev.shiftKey;
+	const ctrl = ev.ctrlKey;
+	const alt = ev.altKey;
 
-	// Hotkeys
-
-	const hotkeys = document.getElementById("hotkeys");
-	for (const action in ACTIONS) {
-		if (ACTIONS[action].keys.length < 1) continue;
-		const row = document.createElement("div");
-		const text = document.createElement("div");
-		const keys = document.createElement("div");
-		row.className = "row";
-		text.classList = "text";
-		keys.className = "keys";
-		row.title = ACTIONS[action].long;
-		text.innerText = ACTIONS[action].short;
-		for (const key of ACTIONS[action].keys) {
-			const hotkey = document.createElement("div");
-			hotkey.className = "key";
-			hotkey.innerText = key;
-			keys.append(hotkey);
+	hotkeys: for (const HOTKEY in HOTKEYS) {
+		const SPECIALS = HOTKEYS[HOTKEY].specials || [];
+		for (const SPECIAL of SPECIALS) {
+			if (SPECIAL === "shift" && !shift) continue hotkeys;
+			if (SPECIAL === "ctrl" && !ctrl) continue hotkeys;
+			if (SPECIAL === "alt" && !alt) continue hotkeys;
 		}
-		row.append(text, keys);
-		hotkeys.append(row);
+		if (HOTKEYS[HOTKEY].key != ev.key) continue;
+		HOTKEYS[HOTKEY].func();
+		return ev.preventDefault();
 	}
+};
+const models = () => {
+	// const hotkeys = document.getElementById("hotkeys");
+	// for (const action in ACTIONS) {
+	// 	if (ACTIONS[action].keys.length < 1) continue;
+	// 	const row = document.createElement("div");
+	// 	const text = document.createElement("div");
+	// 	const keys = document.createElement("div");
+	// 	row.className = "row";
+	// 	text.classList = "text";
+	// 	keys.className = "keys";
+	// 	row.title = ACTIONS[action].long;
+	// 	text.innerText = ACTIONS[action].short;
+	// 	for (const key of ACTIONS[action].keys) {
+	// 		const hotkey = document.createElement("div");
+	// 		hotkey.className = "key";
+	// 		hotkey.innerText = key;
+	// 		keys.append(hotkey);
+	// 	}
+	// 	row.append(text, keys);
+	// 	hotkeys.append(row);
+	// }
 
-	// Hotkeys Events
-	// TODO : Assign hotkeys to the desired actions only (not on windows.addEventListener)
-	// TODO : Make sure to focus the focused panel, nothing else
-	// TODO : Support multiple keys simultaneously
-
-	addEventListener("keydown", (e) => {
-		for (const action in ACTIONS)
-			for (const key of ACTIONS[action].keys)
-				if (e.key == key) {
-					e.preventDefault();
-					ACTIONS[action].func();
-				}
-	});
-
-	// Desires
 	const change_desire = (desire, value) => {
 		localStorage.setItem(desire.name, value);
 		desire.change(value);
@@ -149,8 +141,29 @@ addEventListener("load", () => {
 			row.append(display);
 		}
 	}
+};
 
-	const loading = document.getElementById("loading");
-	loading.classList.add("done");
-	setTimeout(() => loading.remove(), 1500);
+addEventListener("load", () => {
+	addEventListener("keydown", hotkeys);
+	models();
+	loading();
 });
+
+// TODO : TEMPORARY
+import ACTIONS from "./actions.js";
+const temporary = () => {
+	const img = document.createElement("img");
+	img.src = "IMG/cornflower.png";
+	img.onload = () => {
+		const canvas = document.createElement("canvas");
+		const ctx = canvas.getContext("2d");
+		canvas.width = img.width;
+		canvas.height = img.height;
+		ctx.drawImage(img, 0, 0);
+		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		const data = imageData.data;
+		const panel = ACTIONS.ART_NEW(16, 16, data);
+		ACTIONS.ZOOM(panel, 16);
+	};
+};
+addEventListener("load", () => temporary());

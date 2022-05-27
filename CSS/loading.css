@@ -1,7 +1,3 @@
-:root {
-	--loadingTime: 300ms;
-}
-
 @keyframes done-first {
 	from {
 		transform: translate(20%, -35%);
@@ -24,8 +20,8 @@
 	height: 100%;
 	z-index: 999;
 	opacity: 1;
-	transition: opacity var(--loadingTime);
-	transition-delay: var(--loadingTime);
+	transition: opacity 300ms;
+	transition-delay: 200ms;
 	background-color: #151520;
 	text-align: center;
 }
@@ -54,12 +50,12 @@
 	transform: translate(20%, -35%);
 }
 #loading.done .logo .half.first {
-	animation: done-first var(--loadingTime) cubic-bezier(1, 0, 0, 1) forwards;
+	animation: done-first 300ms cubic-bezier(1, 0, 0, 1) forwards;
 }
 
 #loading .logo .half.second {
 	transform: rotate(180deg) translate(20%, -35%);
 }
 #loading.done .logo .half.second {
-	animation: done-second var(--loadingTime) cubic-bezier(1, 0, 0, 1) forwards;
+	animation: done-second 300ms cubic-bezier(1, 0, 0, 1) forwards;
 }

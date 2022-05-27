@@ -76,7 +76,7 @@ function art_new(width = 256, height = 64, data) {
 					panel.selection[(y * panel.width + x) * 4] = 191;
 					panel.selection[(y * panel.width + x) * 4 + 1] = 127;
 					panel.selection[(y * panel.width + x) * 4 + 2] = 31;
-					panel.selection[(x + y * panel.width) * 4 + 3] = 63;
+					panel.selection[(x + y * panel.width) * 4 + 3] = 127;
 				}
 			}
 			highlight_draw(panel);
@@ -170,7 +170,7 @@ const layer_focus = (panel, id) => {
 	}
 	panel.focus_layer = id;
 };
-function layer_remove(panel) {
+function layer_delete(panel) {
 	if (!panel) return;
 	const block = panel.stack.querySelector(`.focus`);
 	if (block) block.remove();
@@ -204,13 +204,14 @@ function generate_context(ev) {
 	context.id = "context";
 	context.style.left = `${x}px`;
 	context.style.top = `${y}px`;
+	//TODO : Remove this make it like hotkeys or sum idk
 	for (const action in ACTIONS) {
 		const row = document.createElement("div");
 		row.className = "row";
 		row.innerText = ACTIONS[action].short;
 		row.addEventListener("click", () => {
 			context.remove();
-			ACTIONS[action].func();
+			ACTIONS[action]();
 		});
 		context.append(row);
 		// TODO : Display the hotkey key for each item or even call the func of it from here
@@ -266,78 +267,42 @@ function modal(id) {
 }
 
 const ACTIONS = {
-	KEYS_MENU: {
-		keys: ["h"],
-		short: "Hotkeys Menu",
-		long: "Toggle the hotkeys menu",
-		func: () => modal("hotkeys"),
-	},
-	DESIRES_MENU: {
-		keys: ["o"],
-		short: "Desires Menu",
-		long: "Toggle the preferences menu",
-		func: () => modal("desires"),
-	},
-	ART_NEW: {
-		keys: ["n"],
-		short: "New Art",
-		long: "Create a new panel",
-		func: (width, height, data) => art_new(width, height, data),
-	},
-	FILES: {
-		keys: ["f"],
-		short: "Files",
-		long: "Open files",
-		func: () => {
-			const input = document.createElement("input");
-			input.type = "file";
-			input.multiple = true;
-			const change = (ev) => {
-				for (const file of ev.target.files) {
-					const reader = new FileReader();
-					reader.onload = (ev) => {
-						const image = new Image();
-						image.src = ev.target.result;
-						image.onload = () => {
-							const canvas = document.createElement("canvas");
-							const ctx = canvas.getContext("2d");
-							canvas.width = image.width;
-							canvas.height = image.height;
-							canvas.getContext("2d").drawImage(image, 0, 0);
-							const imageData = ctx.getImageData(
-								0,
-								0,
-								canvas.width,
-								canvas.height
-							);
-							art_new(image.width, image.height, imageData.data);
-						};
+	OPEN_MODAL: (name) => modal(name),
+	ART_NEW: (width, height, data) => art_new(width, height, data),
+	OPEN_FILES: () => {
+		const input = document.createElement("input");
+		input.type = "file";
+		input.multiple = true;
+		const change = (ev) => {
+			for (const file of ev.target.files) {
+				const reader = new FileReader();
+				reader.onload = (ev) => {
+					const image = new Image();
+					image.src = ev.target.result;
+					image.onload = () => {
+						const canvas = document.createElement("canvas");
+						const ctx = canvas.getContext("2d");
+						canvas.width = image.width;
+						canvas.height = image.height;
+						canvas.getContext("2d").drawImage(image, 0, 0);
+						const imageData = ctx.getImageData(
+							0,
+							0,
+							canvas.width,
+							canvas.height
+						);
+						art_new(image.width, image.height, imageData.data);
 					};
-					reader.readAsDataURL(file);
-				}
-			};
-			input.addEventListener("change", change);
-			input.click();
-		},
+				};
+				reader.readAsDataURL(file);
+			}
+		};
+		input.addEventListener("change", change);
+		input.click();
 	},
-	NEW_LAYER: {
-		keys: ["l"],
-		short: "New Layer",
-		long: "Create a new layer",
-		func: () => layer_new(focused),
-	},
-	REMOVE_LAYER: {
-		keys: ["s"],
-		short: "Remove Layer",
-		long: "Remove the current layer",
-		func: () => layer_remove(focused),
-	},
-	ZOOM: {
-		keys: ["z"],
-		short: "Zoom",
-		long: "Zoom in or out",
-		func: (panel, level) => zoom_set(panel, level),
-	},
+	NEW_LAYER: () => layer_new(focused),
+	DELETE_LAYER: () => layer_delete(focused),
+	ZOOM: (panel, level) => zoom_set(panel, level),
 	// TODO : fusion_layer, exude_alpha
 };
 
