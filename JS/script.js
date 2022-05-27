@@ -27,26 +27,25 @@ const hotkeys = (ev) => {
 	}
 };
 const models = () => {
-	// const hotkeys = document.getElementById("hotkeys");
-	// for (const action in ACTIONS) {
-	// 	if (ACTIONS[action].keys.length < 1) continue;
-	// 	const row = document.createElement("div");
-	// 	const text = document.createElement("div");
-	// 	const keys = document.createElement("div");
-	// 	row.className = "row";
-	// 	text.classList = "text";
-	// 	keys.className = "keys";
-	// 	row.title = ACTIONS[action].long;
-	// 	text.innerText = ACTIONS[action].short;
-	// 	for (const key of ACTIONS[action].keys) {
-	// 		const hotkey = document.createElement("div");
-	// 		hotkey.className = "key";
-	// 		hotkey.innerText = key;
-	// 		keys.append(hotkey);
-	// 	}
-	// 	row.append(text, keys);
-	// 	hotkeys.append(row);
-	// }
+	const hotkeys = document.getElementById("hotkeys");
+	for (const HOTKEY in HOTKEYS) {
+		const row = document.createElement("div");
+		const text = document.createElement("div");
+		const keys = document.createElement("div");
+		row.className = "row";
+		text.classList = "text";
+		keys.className = "keys";
+		text.innerText = HOTKEYS[HOTKEY].name;
+		const LIST = (HOTKEYS[HOTKEY].specials || []).concat(HOTKEYS[HOTKEY].key);
+		for (const KEY of LIST) {
+			const hotkey = document.createElement("div");
+			hotkey.className = "key";
+			hotkey.innerText = KEY;
+			keys.append(hotkey);
+		}
+		row.append(text, keys);
+		hotkeys.append(row);
+	}
 
 	const change_desire = (desire, value) => {
 		localStorage.setItem(desire.name, value);

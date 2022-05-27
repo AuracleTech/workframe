@@ -37,6 +37,8 @@
 	height: 42vh;
 	transform: translate(-50%, -50%);
 	overflow: visible;
+	filter: invert(1);
+	opacity: 0.4;
 }
 #loading .logo .half {
 	position: absolute;

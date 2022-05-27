@@ -266,7 +266,24 @@ function modal(id) {
 	fade.addEventListener("click", end);
 }
 
+const paste_clipboard = (ev) => {
+	const load = (file) => {
+		const image = new Image();
+		image.onload = () => {
+			const canvas = document.createElement("canvas");
+			const context = canvas.getContext("2d");
+			context.drawImage(image, 0, 0);
+			const imageData = context.getImageData(0, 0, image.width, image.height);
+			art_new(image.width, image.height, imageData.data);
+		};
+		image.src = URL.createObjectURL(file);
+	};
+	for (const item of ev.clipboardData.items)
+		if (item.type.indexOf("image") !== -1) load(item.getAsFile());
+};
+
 const ACTIONS = {
+	CLIPBOARD_PASTE: paste_clipboard,
 	OPEN_MODAL: (name) => modal(name),
 	ART_NEW: (width, height, data) => art_new(width, height, data),
 	OPEN_FILES: () => {

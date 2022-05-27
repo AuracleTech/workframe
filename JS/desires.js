@@ -1,5 +1,6 @@
 const s = document.body.style;
 
+// TODO : Make sure the default button on desires hides when the default value is set (Bug on art margin)
 // TODO : Get default automatically from the CSS
 export default {
 	GENERAL: {
@@ -17,7 +18,7 @@ export default {
 	},
 	MARGIN: {
 		name: "Art margin",
-		default: 0,
+		default: 4,
 		range: [0, 64],
 		change: (value) => s.setProperty("--art-margin", `${value}px`),
 	},
