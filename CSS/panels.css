@@ -81,8 +81,8 @@ body.numb.resizing .panel {
 	height: 40px;
 	width: 100%;
 }
-/* Add beautiful synergy to the hover button */
-/* Add JS to make close Hold to close */
+/* TODO : Add beautiful synergy to the hover button */
+/* TODO : Add JS to make close Hold to close */
 .panel > .bar > .close:hover {
 	background-color: #471526;
 }

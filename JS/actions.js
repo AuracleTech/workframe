@@ -198,7 +198,7 @@ const layer_new = (data) => {
 	panel.art.append(layer);
 	panel.pairs.push({ block, layer });
 
-	layer_rename(panel, "Untitled"); // TODO : URGENT -> Make sure it can rename without ID
+	layer_rename(panel, "Untitled");
 };
 
 // TODO : Support custom context menu with actions names as arguments
@@ -288,12 +288,9 @@ const paste_clipboard = (ev) => {
 	for (const item of ev.clipboardData.items)
 		if (item.type.indexOf("image") !== -1) load(item.getAsFile());
 };
-const pen_mode = () => {
-	wall.classList.add("draw");
-};
 
 const ACTIONS = {
-	PEN_MODE: () => pen_mode(),
+	PEN_MODE: () => wall.classList.add("draw"),
 	CLIPBOARD_PASTE: paste_clipboard,
 	OPEN_MODAL: (name) => modal(name),
 	ART_NEW: (width, height, data) => art_new(width, height, data),
