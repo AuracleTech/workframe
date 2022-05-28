@@ -5,7 +5,7 @@ const HOTKEYS = {
 	COLOR_PICKER: {
 		WIP: true,
 		name: "Color picker",
-		key: "s",
+		key: "a",
 		func: () => ACTIONS.COLOR_PICKER(),
 	},
 	COLOR_SELECT: {

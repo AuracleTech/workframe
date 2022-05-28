@@ -3,6 +3,7 @@ import "./hotkeys.js";
 import "./loading.js";
 
 // TODO : TEMPORARY
+// TODO : Remove IMG/cornflower.png when done testing
 import ACTIONS from "./actions.js";
 const temporary = () => {
 	const img = document.createElement("img");

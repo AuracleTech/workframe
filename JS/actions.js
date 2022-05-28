@@ -171,14 +171,14 @@ const layer_focus = (panel, block) => {
 	panel.focus_layer = panel.pairs.indexOf(block);
 	block.classList.add("focus");
 };
-function layer_delete() {
+const layer_delete = () => {
 	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
 	const block = panel.previews.querySelector(`.focus`);
 	if (block) block.remove();
 	const layer = panel.art.querySelector(`.focus`);
 	if (layer) layer.remove();
-}
+};
 const layer_new = (data) => {
 	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
