@@ -31,6 +31,11 @@ function art_new(width = 256, height = 64, data) {
 
 	zoom_set(panel, 1);
 
+	panel.previews.addEventListener("contextmenu", (ev) => {
+		ev.preventDefault();
+		layer_focus(panel);
+	});
+
 	panel.light.addEventListener("pointerdown", (one) => {
 		if (
 			one.button !== 0 ||
@@ -162,6 +167,7 @@ const layer_rename = (panel, text, index) => {
 };
 const layer_focus = (panel, block) => {
 	for (const pair of panel.pairs) pair.block.classList.remove("focus");
+	if (!block) return (panel.focus_layer = null);
 	panel.focus_layer = panel.pairs.indexOf(block);
 	block.classList.add("focus");
 };
