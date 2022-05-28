@@ -4,11 +4,11 @@
 	--hotkeys-separator: #191620;
 	--desires-background: #362e23;
 	--desires-category: #211d18;
-	--desires-highlights: #aced00;
+	--desires-accents: #aced00;
 	--desires-elements: #7b6a51;
 	--context-background: #292336;
 	--context-elements: #1f1b29;
-	--context-highlights: #aced00;
+	--context-accents: #aced00;
 	--max-card-size: 120px;
 	--art-padding: 4px;
 	--layer-name: block;
@@ -143,7 +143,7 @@ body {
 }
 #desires > .row > input[type="checkbox"]:checked::before {
 	content: "✔";
-	color: var(--desires-highlights);
+	color: var(--desires-accents);
 }
 #desires > .row > input[type="color"] {
 	border-radius: 50%;
@@ -167,7 +167,7 @@ body {
 	width: 4px;
 	height: 16px;
 	border-radius: 2px;
-	background-color: var(--desires-highlights);
+	background-color: var(--desires-accents);
 }
 #desires > .row > .reset {
 	width: 28px;
@@ -178,7 +178,7 @@ body {
 }
 #desires > .row > .reset:hover {
 	background-color: var(--desires-elements);
-	color: var(--desires-highlights);
+	color: var(--desires-accents);
 	border-radius: 5px;
 }
 #desires > .row > .reset.visible {
@@ -204,10 +204,10 @@ body {
 	background-color: var(--context-elements);
 }
 #context > .row:hover:active {
-	background-color: var(--context-highlights);
+	background-color: var(--context-accents);
 }
 
-.panel > .content > .stack {
+.panel > .content > .previews {
 	display: flex;
 	flex-direction: column;
 	flex-shrink: 0;
@@ -217,21 +217,21 @@ body {
 .panel > .content.horizontal {
 	flex-direction: column;
 }
-.panel > .content.horizontal > .stack {
+.panel > .content.horizontal > .previews {
 	flex-direction: row;
 	direction: ltr;
 }
-.panel > .content > .stack > .block {
+.panel > .content > .previews > .block {
 	flex-shrink: 0;
 	padding: 4px;
 	margin: 4px;
 	cursor: pointer;
 	background-color: var(--name-background);
 }
-.panel > .content > .stack > .block.focus {
+.panel > .content > .previews > .block.focus {
 	background-color: var(--focus-color);
 }
-.panel > .content > .stack > .block > .card {
+.panel > .content > .previews > .block > .card {
 	display: block;
 	margin: auto;
 	width: 120px;
@@ -239,7 +239,7 @@ body {
 	image-rendering: pixelated;
 	background-image: url("../IMG/transparency.png");
 }
-.panel > .content > .stack > .block > .name {
+.panel > .content > .previews > .block > .name {
 	display: var(--layer-name);
 	width: 100%;
 	height: 24px;
@@ -248,30 +248,39 @@ body {
 	font-size: 12px;
 }
 
-.panel > .content > .workbench {
+.panel > .content > .desk {
 	position: relative;
 	flex-grow: 1;
 	overflow: auto;
 	cursor: crosshair;
 }
-#wall.draw > .panel > .content > .workbench {
+#wall.draw > .panel > .content > .desk {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
-.panel > .content > .workbench > .art {
+.panel > .content > .desk > .art {
 	position: relative;
 	margin: var(--art-margin);
 	background-image: url("../IMG/transparency.png");
 }
-.panel > .content > .workbench > .art > canvas {
+.panel > .content > .desk canvas {
 	position: absolute;
 	image-rendering: pixelated;
+}
+.panel > .content > .desk > .art > .layer {
 	width: 100%;
 	height: 100%;
 }
-.panel > .content > .workbench > .art > canvas.highlight {
+/* TODO : OPTION TO HIDE LAYERS */
+.panel > .content > .desk > .art > .layer.hidden {
+	display: none;
+}
+.panel > .content > .desk > .light {
+	margin: var(--art-margin);
+	top: 0;
+	left: 0;
 	cursor: crosshair;
 }
-#wall.draw > .panel > .content > .workbench > .art > .highlight {
+#wall.draw > .panel > .content > .desk > .art > .light {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
 

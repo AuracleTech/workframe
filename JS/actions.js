@@ -5,22 +5,21 @@ const style = getComputedStyle(document.body);
 function art_new(width = 256, height = 64, data) {
 	const panel = new_panel();
 
-	panel.stack = document.createElement("div");
-	panel.workbench = document.createElement("div");
+	panel.previews = document.createElement("div");
+	panel.desk = document.createElement("div");
 	panel.art = document.createElement("div");
-	panel.highlight = document.createElement("canvas");
-	panel.highlight_ctx = panel.highlight.getContext("2d");
+	panel.light = document.createElement("canvas");
+	panel.light_ctx = panel.light.getContext("2d");
+	panel.light_ctx.imageSmoothingEnabled = false;
+	panel.pairs = [];
 
-	panel.stack.classList.add("stack");
-	panel.workbench.classList.add("workbench");
+	panel.previews.classList.add("previews");
+	panel.desk.classList.add("desk");
 	panel.art.classList.add("art");
-	panel.highlight.classList.add("highlight");
+	panel.light.classList.add("light");
 
-	panel.art.append(panel.highlight);
-	panel.workbench.append(panel.art);
-	panel.content.append(panel.stack, panel.workbench);
-
-	panel.highlight_ctx.imageSmoothingEnabled = false;
+	panel.desk.append(panel.art, panel.light);
+	panel.content.append(panel.previews, panel.desk);
 
 	resize_art(panel, width, height);
 
@@ -32,7 +31,7 @@ function art_new(width = 256, height = 64, data) {
 
 	zoom_set(panel, 1);
 
-	panel.workbench.addEventListener("pointerdown", (one) => {
+	panel.desk.addEventListener("pointerdown", (one) => {
 		if (
 			one.button !== 0 ||
 			one.target.clientWidth < one.offsetX ||
@@ -41,7 +40,7 @@ function art_new(width = 256, height = 64, data) {
 			return;
 
 		const limit = ({ x, y }, floor) => {
-			const rect = panel.highlight.getBoundingClientRect();
+			const rect = panel.light.getBoundingClientRect();
 			x = (x - rect.left) / panel.zoom;
 			y = (y - rect.top) / panel.zoom;
 			if (floor) {
@@ -79,7 +78,7 @@ function art_new(width = 256, height = 64, data) {
 					panel.selection[(x + y * panel.width) * 4 + 3] = 127;
 				}
 			}
-			highlight_draw(panel);
+			light_draw(panel);
 		};
 		const pointerup_action = () => {
 			removeEventListener("pointermove", pointermove_action);
@@ -89,10 +88,10 @@ function art_new(width = 256, height = 64, data) {
 		addEventListener("pointerup", pointerup_action);
 		// TODO : Better animation and system overall
 		panel.selection.fill(0);
-		highlight_draw(panel);
+		light_draw(panel);
 	});
 
-	panel.workbench.addEventListener(
+	panel.desk.addEventListener(
 		"wheel",
 		(ev) => {
 			// TODO : Zoom where cursor is located
@@ -109,27 +108,23 @@ function art_new(width = 256, height = 64, data) {
 	});
 	return panel;
 }
-const new_block = (panel, data, id) => {
+const block_new = (panel, data) => {
 	// TODO : Unfocus a layer by clicking on the same layer actively focused
 	// TODO : Low priority -> Display only the canvas layer when hovering layers to see that layer only
 	const block = document.createElement("div");
-	const card = document.createElement("canvas");
-	const ctx = card.getContext("2d");
-	const name = document.createElement("div");
+	block.card = document.createElement("canvas");
+	block.card_ctx = block.card.getContext("2d");
+	block.card_ctx.imageSmoothingEnabled = false;
+	block.name = document.createElement("div");
 
 	block.classList.add("block");
-	name.classList.add("name");
-	card.classList.add("card");
+	block.name.classList.add("name");
+	block.card.classList.add("card");
 
-	block.id = `block.${id}`;
-	block.name = name;
+	block.append(block.card, block.name);
 
-	block.append(card, name);
-	panel.stack.prepend(block);
-
-	ctx.imageSmoothingEnabled = false;
-	card.width = panel.width;
-	card.height = panel.height;
+	block.card.width = panel.width;
+	block.card.height = panel.height;
 	const max_card_size = parseInt(style.getPropertyValue("--max-card-size"));
 	let width, height;
 	if (panel.width > panel.height) {
@@ -141,45 +136,39 @@ const new_block = (panel, data, id) => {
 		height = max_card_size;
 		width = max_card_size * (panel.width / panel.height);
 	}
-	card.style.width = `${width}px`;
-	card.style.height = `${height}px`;
-	ctx.drawImage(data, 0, 0, card.width, card.height);
+	block.card.style.width = `${width}px`;
+	block.card.style.height = `${height}px`;
+	if (data)
+		block.card_ctx.putImageData(
+			new ImageData(data, panel.width, panel.height),
+			0,
+			0
+		);
 
-	layer_rename(panel, id, "Untitled");
 	// TODO : When panel is squished every value using clientHeight/Width will be wrong
 	// TODO : Stop hotkeys working when squished
-	block.addEventListener("click", () => layer_focus(panel, id));
+	block.addEventListener("click", () => layer_focus(panel, block));
+	// TODO : Context menu
 	block.addEventListener("contextmenu", generate_context);
+
+	return block;
 };
 
-const block_get = (panel, id) => {
-	for (const block of panel.stack.children) {
-		if (block.id === `block.${id}`) return block;
-	}
-	// TODO : Make errors impossible
-	console.error(`Block ${id} not found line`);
+const layer_rename = (panel, text, index) => {
+	if (!index) index = panel.pairs.length - 1;
+	const pair = panel.pairs[index];
+	pair.block.name.innerText = text;
+	pair.block.title = text;
 };
-
-const layer_rename = (panel, id, name) => {
-	const block = block_get(panel, id);
-	block.name.innerText = name;
-	block.title = name;
-};
-const layer_focus = (panel, id) => {
-	for (const block of panel.stack.children) {
-		block.classList.remove("focus");
-		if (block.id === `block.${id}`) block.classList.add("focus");
-	}
-	for (const layer of panel.art.children) {
-		layer.classList.remove("focus");
-		if (layer.id === `layer.${id}`) layer.classList.add("focus");
-	}
-	panel.focus_layer = id;
+const layer_focus = (panel, block) => {
+	for (const pair of panel.pairs) pair.block.classList.remove("focus");
+	panel.focus_layer = panel.pairs.indexOf(block);
+	block.classList.add("focus");
 };
 function layer_delete() {
 	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
-	const block = panel.stack.querySelector(`.focus`);
+	const block = panel.previews.querySelector(`.focus`);
 	if (block) block.remove();
 	const layer = panel.art.querySelector(`.focus`);
 	if (layer) layer.remove();
@@ -187,19 +176,29 @@ function layer_delete() {
 const layer_new = (data) => {
 	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
-	if (!panel.id_increment) panel.id_increment = 0;
-	const id = panel.id_increment++; // TODO : Replace by array like in wall
-	const canvas = document.createElement("canvas");
-	const ctx = canvas.getContext("2d");
-	ctx.imageSmoothingEnabled = false;
-	canvas.width = panel.width;
-	canvas.height = panel.height;
-	canvas.id = `layer.${id}`;
-	canvas.classList = "layer";
+
+	const layer = document.createElement("canvas");
+	const layer_ctx = layer.getContext("2d");
+	layer_ctx.imageSmoothingEnabled = false;
+
+	layer.width = panel.width;
+	layer.height = panel.height;
+	layer.classList = "layer";
+
 	if (data)
-		ctx.putImageData(new ImageData(data, panel.width, panel.height), 0, 0);
-	new_block(panel, canvas, id);
-	panel.art.insertBefore(canvas, panel.highlight);
+		layer_ctx.putImageData(
+			new ImageData(data, panel.width, panel.height),
+			0,
+			0
+		);
+
+	const block = block_new(panel, data);
+
+	panel.previews.prepend(block);
+	panel.art.append(layer);
+	panel.pairs.push({ block, layer });
+
+	layer_rename(panel, "Untitled"); // TODO : URGENT -> Make sure it can rename without ID
 };
 
 // TODO : Support custom context menu with actions names as arguments
@@ -230,26 +229,26 @@ function generate_context(ev) {
 }
 function zoom_set(panel, level) {
 	panel.zoom = Math.min(32, Math.max(1, level));
-	resize_highlight(panel);
+	resize_light(panel);
 }
-function resize_highlight(panel) {
+function resize_light(panel) {
 	panel.art.style.width = `${panel.width * panel.zoom}px`;
 	panel.art.style.height = `${panel.height * panel.zoom}px`;
-	panel.highlight.width = panel.width;
-	panel.highlight.height = panel.height;
-	panel.highlight.style.width = `${panel.width * panel.zoom}px`;
-	panel.highlight.style.height = `${panel.height * panel.zoom}px`;
-	highlight_draw(panel);
+	panel.light.width = panel.width;
+	panel.light.height = panel.height;
+	panel.light.style.width = `${panel.width * panel.zoom}px`;
+	panel.light.style.height = `${panel.height * panel.zoom}px`;
+	light_draw(panel);
 }
 // TODO : Multiple resize functions and algorithms
 function resize_art(panel, width, height) {
 	panel.width = width;
 	panel.height = height;
 	panel.selection = new Uint8ClampedArray(width * height * 4);
-	resize_highlight(panel);
+	resize_light(panel);
 }
-function highlight_draw(panel) {
-	panel.highlight_ctx.putImageData(
+function light_draw(panel) {
+	panel.light_ctx.putImageData(
 		new ImageData(panel.selection, panel.width, panel.height),
 		0,
 		0
