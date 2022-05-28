@@ -1,14 +1,6 @@
-import DESIRES from "./desires.js";
-import HOTKEYS from "./hotkeys.js";
-
-addEventListener("load", () => {
-	const loading = document.getElementById("loading");
-	loading.classList.add("done");
-	loading.addEventListener(
-		"animationend",
-		(ev) => ev.target.parentElement == loading && loading.remove()
-	);
-});
+import "./desires.js";
+import "./hotkeys.js";
+import "./loading.js";
 
 // TODO : TEMPORARY
 import ACTIONS from "./actions.js";
