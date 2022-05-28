@@ -17,7 +17,7 @@ const HOTKEYS = {
 	CRAYON: {
 		WIP: true,
 		name: "Crayon",
-		key: "c",
+		key: "q",
 		func: () => ACTIONS.CRAYON(),
 	},
 	SAVE_ART: {
@@ -60,6 +60,24 @@ const HOTKEYS = {
 	},
 };
 
+const hotkeys = (ev) => {
+	const shift = ev.shiftKey;
+	const ctrl = ev.ctrlKey;
+	const alt = ev.altKey;
+
+	hotkeys: for (const HOTKEY in HOTKEYS) {
+		const SPECIALS = HOTKEYS[HOTKEY].specials || [];
+		for (const SPECIAL of SPECIALS) {
+			if (SPECIAL === "shift" && !shift) continue hotkeys;
+			if (SPECIAL === "ctrl" && !ctrl) continue hotkeys;
+			if (SPECIAL === "alt" && !alt) continue hotkeys;
+		}
+		if (HOTKEYS[HOTKEY].key != ev.key) continue;
+		HOTKEYS[HOTKEY].func();
+		return ev.preventDefault();
+	}
+};
+
 const init_modal = () => {
 	const modal = document.getElementById("hotkeys");
 	for (const HOTKEY in HOTKEYS) {
@@ -84,5 +102,6 @@ const init_modal = () => {
 };
 
 addEventListener("load", init_modal);
+addEventListener("keydown", hotkeys);
 addEventListener("paste", ACTIONS.CLIPBOARD_PASTE);
 export default HOTKEYS;
