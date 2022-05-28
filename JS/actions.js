@@ -296,7 +296,7 @@ const paste_clipboard = (ev) => {
 };
 
 const ACTIONS = {
-	PEN_MODE: () => wall.classList.toggle("draw"),
+	CRAYON: () => wall.classList.toggle("crayon"),
 	CLIPBOARD_PASTE: paste_clipboard,
 	OPEN_MODAL: (name) => modal(name),
 	ART_NEW: (width, height, data) => art_new(width, height, data),

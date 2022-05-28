@@ -276,7 +276,7 @@ body {
 	left: 0;
 	cursor: pointer;
 }
-#wall.draw > .panel > .content > .desk > .light {
+#wall.crayon > .panel > .content > .desk > .light {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
 

@@ -2,27 +2,24 @@ import ACTIONS from "./actions.js";
 
 const HOTKEYS = {
 	// TODO : IMPLEMENT
-	COLOR_SNAPPER: {
+	COLOR_PICKER: {
 		WIP: true,
-		name: "Color snapper",
+		name: "Color picker",
 		key: "s",
-		func: () => ACTIONS.COLOR_SNAPPER(),
+		func: () => ACTIONS.COLOR_PICKER(),
 	},
-	// TODO : IMPLEMENT
 	COLOR_SELECT: {
 		WIP: true,
 		name: "Color select",
 		key: "c",
 		func: () => ACTIONS.COLOR_SELECT(),
 	},
-	// TODO : IMPLEMENT
-	PEN_MODE: {
+	CRAYON: {
 		WIP: true,
-		name: "Pen Mode",
-		key: "p",
-		func: () => ACTIONS.PEN_MODE(),
+		name: "Crayon",
+		key: "c",
+		func: () => ACTIONS.CRAYON(),
 	},
-	// TODO : IMPLEMENT
 	SAVE_ART: {
 		WIP: true,
 		name: "Save art",
@@ -30,6 +27,7 @@ const HOTKEYS = {
 		specials: ["ctrl"],
 		func: () => ACTIONS.SAVE_ART(),
 	},
+
 	OPEN_FILES: {
 		name: "Open files",
 		key: "o",
@@ -42,12 +40,12 @@ const HOTKEYS = {
 	},
 	HOTKEYS_MODAL: {
 		name: "Hotkeys",
-		key: ["h"],
+		key: "h",
 		func: () => ACTIONS.OPEN_MODAL("hotkeys"),
 	},
 	DESIRES_MODAL: {
 		name: "Desires",
-		key: ["d"],
+		key: "d",
 		func: () => ACTIONS.OPEN_MODAL("desires"),
 	},
 	NEW_LAYER: {
