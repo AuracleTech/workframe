@@ -33,7 +33,7 @@ function art_new(width = 256, height = 64, data) {
 
 	panel.previews.addEventListener("contextmenu", (ev) => {
 		ev.preventDefault();
-		layer_focus(panel);
+		if (ev.target === ev.currentTarget) layer_focus(panel);
 	});
 
 	panel.light.addEventListener("pointerdown", (one) => {
