@@ -31,7 +31,7 @@ function art_new(width = 256, height = 64, data) {
 
 	zoom_set(panel, 1);
 
-	panel.desk.addEventListener("pointerdown", (one) => {
+	panel.light.addEventListener("pointerdown", (one) => {
 		if (
 			one.button !== 0 ||
 			one.target.clientWidth < one.offsetX ||
@@ -102,7 +102,7 @@ function art_new(width = 256, height = 64, data) {
 		{ passive: false }
 	);
 	// TODO : Turn every function into event listeners (context, resize etc etc)
-	panel.art.addEventListener("contextmenu", (ev) => {
+	panel.desk.addEventListener("contextmenu", (ev) => {
 		ev.preventDefault();
 		// TODO : context_generate(ev.clientX, ev.clientY);
 	});
@@ -290,7 +290,7 @@ const paste_clipboard = (ev) => {
 };
 
 const ACTIONS = {
-	PEN_MODE: () => wall.classList.add("draw"),
+	PEN_MODE: () => wall.classList.toggle("draw"),
 	CLIPBOARD_PASTE: paste_clipboard,
 	OPEN_MODAL: (name) => modal(name),
 	ART_NEW: (width, height, data) => art_new(width, height, data),

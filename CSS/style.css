@@ -252,10 +252,6 @@ body {
 	position: relative;
 	flex-grow: 1;
 	overflow: auto;
-	cursor: crosshair;
-}
-#wall.draw > .panel > .content > .desk {
-	cursor: url("../IMG/cursor_pen.png"), auto;
 }
 .panel > .content > .desk > .art {
 	position: relative;
@@ -278,9 +274,9 @@ body {
 	margin: var(--art-margin);
 	top: 0;
 	left: 0;
-	cursor: crosshair;
+	cursor: pointer;
 }
-#wall.draw > .panel > .content > .desk > .art > .light {
+#wall.draw > .panel > .content > .desk > .light {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
 
