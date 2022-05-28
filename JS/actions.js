@@ -167,17 +167,19 @@ const layer_rename = (panel, text, index) => {
 };
 const layer_focus = (panel, block) => {
 	for (const pair of panel.pairs) pair.block.classList.remove("focus");
-	if (!block) return (panel.focus_layer = null);
-	panel.focus_layer = panel.pairs.indexOf(block);
+	if (!block) return (panel.focus_pair = null);
+	panel.focus_pair = panel.pairs.find((pair) => pair.block === block);
 	block.classList.add("focus");
 };
 const layer_delete = () => {
 	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
-	const block = panel.previews.querySelector(`.focus`);
-	if (block) block.remove();
-	const layer = panel.art.querySelector(`.focus`);
-	if (layer) layer.remove();
+	const pair = panel.focus_pair;
+	if (!pair) return;
+	pair.block.remove();
+	pair.layer.remove();
+	panel.pairs.filter((pair) => pair.block !== pair.block);
+	panel.focus_pair = null;
 };
 const layer_new = (data) => {
 	const panel = wall.panels[wall.panels.length - 1];
