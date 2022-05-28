@@ -266,6 +266,12 @@ body {
 	width: 100%;
 	height: 100%;
 }
+.panel > .content > .desk > .art.peek > .layer {
+	display: none;
+}
+.panel > .content > .desk > .art.peek > .layer.peek {
+	display: block;
+}
 /* TODO : OPTION TO HIDE LAYERS */
 .panel > .content > .desk > .art > .layer.hidden {
 	display: none;

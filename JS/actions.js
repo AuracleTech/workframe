@@ -115,7 +115,6 @@ function art_new(width = 256, height = 64, data) {
 }
 const block_new = (panel, data) => {
 	// TODO : Unfocus a layer by clicking on the same layer actively focused
-	// TODO : Low priority -> Display only the canvas layer when hovering layers to see that layer only
 	const block = document.createElement("div");
 	block.card = document.createElement("canvas");
 	block.card_ctx = block.card.getContext("2d");
@@ -156,6 +155,15 @@ const block_new = (panel, data) => {
 	// TODO : Context menu
 	block.addEventListener("contextmenu", generate_context);
 
+	block.addEventListener("mouseenter", () => {
+		panel.art.classList.add("peek");
+		const pair = panel.pairs.find((pair) => pair.block === block);
+		pair.layer.classList.add("peek");
+	});
+	block.addEventListener("mouseleave", () => {
+		panel.art.classList.remove("peek");
+		panel.pairs.forEach((pair) => pair.layer.classList.remove("peek"));
+	});
 	return block;
 };
 
