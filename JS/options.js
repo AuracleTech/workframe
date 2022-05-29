@@ -1,7 +1,7 @@
 const s = document.body.style;
 
-// TODO : Hide 'set default' on desires value change if value matches default value
-const DESIRES = {
+// TODO : Hide 'set default' on option value change if value matches default value
+const OPTIONS = {
 	GENERAL: {
 		name: "Options",
 	},
@@ -24,29 +24,29 @@ const DESIRES = {
 };
 
 const init_modal = () => {
-	const change_desire = (desire, value) => {
-		localStorage.setItem(desire.name, value);
-		desire.change(value);
+	const option_edit = (option, value) => {
+		localStorage.setItem(option.name, value);
+		option.change(value);
 	};
-	const desires = document.getElementById("desires");
-	for (const desire in DESIRES) {
+	const modal = document.getElementById("options");
+	for (const option in OPTIONS) {
 		const row = document.createElement("div");
 		const text = document.createElement("div");
 		row.classList = "row";
 		text.classList = "text";
-		text.innerText = DESIRES[desire].name;
+		text.innerText = OPTIONS[option].name;
 		row.append(text);
-		desires.append(row);
+		modal.append(row);
 
-		if (DESIRES[desire].default == null) {
+		if (OPTIONS[option].default == null) {
 			row.classList.add("category");
 			continue;
 		}
 
-		// Load desires from localStorage
-		let value = localStorage.getItem(DESIRES[desire].name);
-		if (!value) value = DESIRES[desire].default;
-		switch (typeof DESIRES[desire].default) {
+		// Load option from localStorage
+		let value = localStorage.getItem(OPTIONS[option].name);
+		if (!value) value = OPTIONS[option].default;
+		switch (typeof OPTIONS[option].default) {
 			case "number":
 				value = parseInt(value);
 				break;
@@ -54,14 +54,14 @@ const init_modal = () => {
 				value = value === "true";
 				break;
 		}
-		DESIRES[desire].change(value);
+		OPTIONS[option].change(value);
 
 		// Add reset button
 		const reset = document.createElement("div");
 		const element = document.createElement("input");
 		reset.classList = "reset";
 		reset.innerText = "↪";
-		if (value != DESIRES[desire].default) reset.classList.add("visible");
+		if (value != OPTIONS[option].default) reset.classList.add("visible");
 		row.append(reset, element);
 
 		// Boolean -> Checkbox
@@ -69,14 +69,14 @@ const init_modal = () => {
 			element.type = "checkbox";
 			element.checked = value;
 			element.addEventListener("change", () => {
-				change_desire(DESIRES[desire], element.checked);
-				if (element.checked == DESIRES[desire].default)
+				option_edit(OPTIONS[option], element.checked);
+				if (element.checked == OPTIONS[option].default)
 					reset.classList.remove("visible");
 				else reset.classList.add("visible");
 			});
 			reset.addEventListener("click", () => {
-				change_desire(DESIRES[desire], DESIRES[desire].default);
-				element.checked = DESIRES[desire].default;
+				option_edit(OPTIONS[option], OPTIONS[option].default);
+				element.checked = OPTIONS[option].default;
 				reset.classList.toggle("visible");
 			});
 		}
@@ -85,12 +85,12 @@ const init_modal = () => {
 			element.type = "color";
 			element.value = value;
 			element.addEventListener("input", () => {
-				change_desire(DESIRES[desire], element.value);
+				option_edit(OPTIONS[option], element.value);
 				reset.classList.add("visible");
 			});
 			reset.addEventListener("click", () => {
-				change_desire(DESIRES[desire], DESIRES[desire].default);
-				element.value = DESIRES[desire].default;
+				option_edit(OPTIONS[option], OPTIONS[option].default);
+				element.value = OPTIONS[option].default;
 				reset.classList.toggle("visible");
 			});
 		}
@@ -100,18 +100,18 @@ const init_modal = () => {
 			display.classList.add("display");
 			display.innerText = value;
 			element.type = "range";
-			element.min = DESIRES[desire].range[0];
-			element.max = DESIRES[desire].range[1];
+			element.min = OPTIONS[option].range[0];
+			element.max = OPTIONS[option].range[1];
 			element.value = value;
 			element.addEventListener("input", () => {
-				change_desire(DESIRES[desire], element.value);
+				option_edit(OPTIONS[option], element.value);
 				display.innerText = element.value;
 				reset.classList.add("visible");
 			});
 			reset.addEventListener("click", () => {
-				change_desire(DESIRES[desire], DESIRES[desire].default);
-				element.value = DESIRES[desire].default;
-				display.innerText = DESIRES[desire].default;
+				option_edit(OPTIONS[option], OPTIONS[option].default);
+				element.value = OPTIONS[option].default;
+				display.innerText = OPTIONS[option].default;
 				reset.classList.toggle("visible");
 			});
 			row.append(display);
@@ -120,4 +120,4 @@ const init_modal = () => {
 };
 
 addEventListener("load", init_modal);
-export default DESIRES;
+export default OPTIONS;

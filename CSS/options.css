@@ -1,0 +1,99 @@
+:root {
+	--options-background: #362e23;
+	--options-category: #211d18;
+	--options-accents: #aced00;
+	--options-elements: #7b6a51;
+}
+
+.modal#options {
+	width: 400px;
+	max-height: calc(100% - 150px);
+	z-index: 999;
+	overflow-y: auto;
+	background-color: var(--options-background);
+}
+.modal#options > .row {
+	display: flex;
+	height: 50px;
+	line-height: 50px;
+	margin: 0 auto;
+	padding: 0 24px;
+}
+.modal#options > .row > .text {
+	flex-grow: 1;
+}
+.modal#options > .row.category {
+	height: 36px;
+	line-height: 36px;
+	text-transform: uppercase;
+	text-align: center;
+	background-color: var(--options-category);
+}
+.modal#options > .row > input,
+.modal#options > .row > .reset,
+.modal#options > .row > .display {
+	align-items: stretch;
+	text-align: center;
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	margin: auto;
+	cursor: pointer;
+}
+.modal#options > .row > .display {
+	cursor: default;
+}
+.modal#options > .row > input {
+	border: 2px solid var(--options-elements);
+	border-radius: 2px;
+}
+.modal#options > .row > input[type="checkbox"] {
+	font-size: 24px;
+	border: 2px solid var(--options-elements);
+}
+.modal#options > .row > input[type="checkbox"]:checked {
+	background-color: var(--options-elements);
+}
+.modal#options > .row > input[type="checkbox"]:checked::before {
+	content: "✔";
+	color: var(--options-accents);
+}
+.modal#options > .row > input[type="color"] {
+	border-radius: 50%;
+	overflow: hidden;
+}
+.modal#options > .row > input[type="color"]::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+.modal#options > .row > input[type="color"]::-webkit-color-swatch {
+	border: none;
+}
+.modal#options > .row > input[type="range"] {
+	border: none;
+	width: 100px;
+	background-color: var(--options-elements);
+	height: 4px;
+}
+.modal#options > .row > input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 4px;
+	height: 16px;
+	border-radius: 2px;
+	background-color: var(--options-accents);
+}
+.modal#options > .row > .reset {
+	width: 28px;
+	height: 28px;
+	margin: auto 5px;
+	display: none;
+	cursor: pointer;
+}
+.modal#options > .row > .reset:hover {
+	background-color: var(--options-elements);
+	color: var(--options-accents);
+	border-radius: 5px;
+}
+.modal#options > .row > .reset.visible {
+	display: block;
+}

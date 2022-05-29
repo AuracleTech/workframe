@@ -1,4 +1,4 @@
-import "./desires.js";
+import "./options.js";
 import "./hotkeys.js";
 import "./loading.js";
 

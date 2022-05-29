@@ -40,14 +40,14 @@ const HOTKEYS = {
 		func: () => ACTIONS.ART_NEW(),
 	},
 	HOTKEYS_MODAL: {
-		tip: "Hotkeys",
+		tip: "Hotkeys help",
 		key: "h",
 		func: () => ACTIONS.OPEN_MODAL("hotkeys"),
 	},
-	DESIRES_MODAL: {
-		tip: "Desires",
+	OPTIONS_MODAL: {
+		tip: "Options",
 		key: "d",
-		func: () => ACTIONS.OPEN_MODAL("desires"),
+		func: () => ACTIONS.OPEN_MODAL("options"),
 	},
 	NEW_LAYER: {
 		tip: "New layer",
@@ -103,7 +103,7 @@ const keyboard_keys = [
 ];
 
 const init_modal = () => {
-	const keyboard = document.getElementById("keyboard");
+	const modal = document.getElementById("keyboard");
 	for (const row of keyboard_keys) {
 		const rowDiv = document.createElement("div");
 		rowDiv.classList.add("row");
@@ -129,7 +129,7 @@ const init_modal = () => {
 			else if (key == "space") keyDiv.classList.add("space");
 			rowDiv.append(keyDiv);
 		}
-		keyboard.append(rowDiv);
+		modal.append(rowDiv);
 	}
 };
 
