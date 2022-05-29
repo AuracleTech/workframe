@@ -66,6 +66,7 @@
 	background: #ffffff;
 	font-weight: bold;
 	text-transform: none;
+	pointer-events: none;
 }
 .modal#hotkeys > #keyboard > .row > .key > .tip:before {
 	content: "";
