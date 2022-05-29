@@ -156,14 +156,15 @@ const block_new = (panel, data) => {
 	// TODO : Context menu
 	block.addEventListener("contextmenu", generate_context);
 
-	block.addEventListener("mouseenter", () => {
-		panel.art.classList.add("peek");
+	block.addEventListener("pointerdown", (ev) => {
+		if (ev.button !== 1) return;
 		const pair = panel.pairs.find((pair) => pair.block === block);
+		panel.art.classList.add("peek");
 		pair.layer.classList.add("peek");
-	});
-	block.addEventListener("mouseleave", () => {
-		panel.art.classList.remove("peek");
-		panel.pairs.forEach((pair) => pair.layer.classList.remove("peek"));
+		addEventListener("pointerup", () => {
+			panel.pairs.forEach((pair) => pair.layer.classList.remove("peek"));
+			panel.art.classList.remove("peek");
+		});
 	});
 	return block;
 };
