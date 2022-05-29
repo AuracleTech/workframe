@@ -1,25 +1,28 @@
 const s = document.body.style;
+const c = getComputedStyle(document.documentElement);
 
 // TODO : Hide 'set default' on option value change if value matches default value
+const get = (name) => c.getPropertyValue(name).trim();
+const set = (name, value) => s.setProperty(name, value);
 const OPTIONS = {
 	GENERAL: {
 		name: "Options",
 	},
 	LAYER_NAMES: {
 		name: "Layer names",
-		default: true,
-		change: (value) => s.setProperty("--layer-name", value ? "block" : "none"),
+		default: get("--layer-name") == "block",
+		change: (value) => set("--layer-name", value ? "block" : "none"),
 	},
 	FOCUS_COLOR: {
 		name: "Focus color",
-		default: "#0e75a4",
-		change: (value) => s.setProperty("--focus-color", value),
+		default: get("--focus-color"),
+		change: (value) => set("--focus-color", value),
 	},
 	MARGIN: {
 		name: "Art margin",
-		default: 0,
+		default: parseInt(get("--art-margin")),
 		range: [0, 64],
-		change: (value) => s.setProperty("--art-margin", `${value}px`),
+		change: (value) => set("--art-margin", `${value}px`),
 	},
 };
 
@@ -51,7 +54,9 @@ const init_modal = () => {
 				value = parseInt(value);
 				break;
 			case "boolean":
-				value = value === "true";
+				console.log(value);
+				value = value == "true" || value === true;
+				console.log(value);
 				break;
 		}
 		OPTIONS[option].change(value);

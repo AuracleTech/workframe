@@ -1,6 +1,6 @@
 :root {
 	--max-card-size: 120px;
-	--art-padding: 4px;
+	--art-margin: 0px;
 	--layer-name: block;
 	--block: #ffffff0d;
 }

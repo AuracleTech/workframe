@@ -2,12 +2,11 @@
 	--scrollbar-background: #8080ad;
 	--scrollbar-size: 10px;
 	--wall: #151520;
-	--panel: #38374d;
+	--panel: #292336;
 	--panel-min-width: 120px;
 	--panel-min-height: 40px;
-	--content: rgba(0, 0, 0, 0.3);
+	--content: #1f1b294d;
 	--close-button-hover: #471526;
-	--focus-color: #0e75a4;
 	--resize-color: #d187c5;
 }
 
