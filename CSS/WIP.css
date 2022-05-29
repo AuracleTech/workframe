@@ -17,7 +17,6 @@
 	font-size: 22px;
 	color: #0d0d14;
 	text-transform: uppercase;
-	overflow: visible;
 }
 #INFO span {
 	color: var(--focus-color);

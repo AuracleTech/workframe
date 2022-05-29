@@ -1,11 +1,4 @@
 :root {
-	--hotkeys-background: #292336;
-	--hotkeys-keys: #1f1b29;
-	--hotkeys-separator: #191620;
-	--desires-background: #362e23;
-	--desires-category: #211d18;
-	--desires-accents: #aced00;
-	--desires-elements: #7b6a51;
 	--context-background: #292336;
 	--context-elements: #1f1b29;
 	--context-accents: #aced00;
@@ -13,7 +6,7 @@
 	--art-padding: 4px;
 	--layer-name: block;
 	--focus-color: #0e75a4;
-	--name-background: #38374d;
+	--block-background: #38374d;
 }
 
 @font-face {
@@ -37,7 +30,6 @@
 	-ms-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
-	overflow: hidden;
 }
 
 body {
@@ -52,9 +44,10 @@ body {
 	width: 100%;
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.4);
-	-webkit-backdrop-filter: blur(2px);
-	backdrop-filter: blur(2px);
+	-webkit-backdrop-filter: blur(16px);
+	backdrop-filter: blur(16px);
 	z-index: 998;
+	cursor: pointer;
 	visibility: hidden;
 }
 #fade.active {
@@ -64,124 +57,12 @@ body {
 	position: fixed;
 	top: 50%;
 	left: 50%;
-	width: 400px;
-	max-height: calc(100% - 150px);
-	z-index: 999;
 	transform: translate(-50%, -50%);
-	overflow-y: auto;
 	border-radius: 5px;
+	cursor: default;
 	display: none;
-}
-#fade > .modal > .row {
-	display: flex;
-	height: 50px;
-	line-height: 50px;
-	margin: 0 auto;
-	padding: 0 24px;
-}
-#fade > .modal > .row > .text {
-	flex-grow: 1;
 }
 #fade > .modal.active {
-	display: block;
-}
-
-/* TODO : Fusion both models into one and use CSS root to edit colors */
-#hotkeys {
-	background-color: var(--hotkeys-background);
-}
-#hotkeys > .row > .keys {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	text-transform: capitalize;
-	text-align: center;
-}
-#hotkeys > .row > .keys > .key {
-	width: 36px;
-	height: 36px;
-	line-height: 36px;
-	border-radius: 3px;
-	margin-left: 6px;
-	background-color: var(--hotkeys-keys);
-}
-
-#desires {
-	background-color: var(--desires-background);
-}
-#desires > .row.category {
-	height: 36px;
-	line-height: 36px;
-	text-transform: uppercase;
-	text-align: center;
-	background-color: var(--desires-category);
-}
-#desires > .row > input,
-#desires > .row > .reset,
-#desires > .row > .display {
-	align-items: stretch;
-	text-align: center;
-	width: 30px;
-	height: 30px;
-	line-height: 30px;
-	margin: auto;
-	cursor: pointer;
-}
-#desires > .row > .display {
-	cursor: default;
-}
-#desires > .row > input {
-	border: 2px solid var(--desires-elements);
-	border-radius: 2px;
-}
-#desires > .row > input[type="checkbox"] {
-	font-size: 24px;
-	border: 2px solid var(--desires-elements);
-}
-#desires > .row > input[type="checkbox"]:checked {
-	background-color: var(--desires-elements);
-}
-#desires > .row > input[type="checkbox"]:checked::before {
-	content: "✔";
-	color: var(--desires-accents);
-}
-#desires > .row > input[type="color"] {
-	border-radius: 50%;
-}
-#desires > .row > input[type="color"]::-webkit-color-swatch-wrapper {
-	padding: 0;
-}
-#desires > .row > input[type="color"]::-webkit-color-swatch {
-	border: none;
-}
-#desires > .row > input[type="range"] {
-	border: none;
-	width: 100px;
-	background-color: var(--desires-elements);
-	height: 4px;
-	overflow: visible;
-}
-#desires > .row > input[type="range"]::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 4px;
-	height: 16px;
-	border-radius: 2px;
-	background-color: var(--desires-accents);
-}
-#desires > .row > .reset {
-	width: 28px;
-	height: 28px;
-	margin: auto 5px;
-	display: none;
-	cursor: pointer;
-}
-#desires > .row > .reset:hover {
-	background-color: var(--desires-elements);
-	color: var(--desires-accents);
-	border-radius: 5px;
-}
-#desires > .row > .reset.visible {
 	display: block;
 }
 
@@ -226,7 +107,8 @@ body {
 	padding: 4px;
 	margin: 4px;
 	cursor: pointer;
-	background-color: var(--name-background);
+	background-color: var(--block-background);
+	overflow: hidden;
 }
 .panel > .content > .previews > .block.focus {
 	background-color: var(--focus-color);
@@ -282,10 +164,10 @@ body {
 	left: 0;
 	cursor: pointer;
 }
+
 #wall.crayon > .panel > .content > .desk > .light {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }
-
 #wall::before {
 	background-image: url("../IMG/workframe_black.svg");
 }
