@@ -152,7 +152,7 @@ const resize = (panel, size) => {
  * options.resizable : boolean
  * options.preservable : boolean
  */
-const new_panel = (options = { resizable: true, preservable: false }) => {
+const new_panel = (options = { resizable: false, preservable: false }) => {
 	const panel = document.createElement("div");
 	panel.bar = document.createElement("div");
 	panel.close = document.createElement("div");
