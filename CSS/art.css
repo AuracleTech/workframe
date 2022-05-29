@@ -1,91 +1,8 @@
 :root {
-	--context-background: #292336;
-	--context-elements: #1f1b29;
-	--context-accents: #aced00;
 	--max-card-size: 120px;
 	--art-padding: 4px;
 	--layer-name: block;
-	--focus-color: #0e75a4;
-	--block-background: #38374d;
-}
-
-@font-face {
-	font-family: "Comfortaa";
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
-	src: url("../FONT/Comfortaa-Regular.ttf") format("truetype");
-}
-
-* {
-	-webkit-appearance: none;
-	appearance: none;
-	background-color: transparent;
-	padding: 0;
-	margin: 0;
-	border: 0;
-	outline: 0;
-	font-family: Comfortaa, sans-serif;
-	-webkit-user-select: none;
-	-ms-user-select: none;
-	-moz-user-select: none;
-	user-select: none;
-}
-
-body {
-	color: #ffffff;
-	font-size: 14px;
-}
-
-#fade {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(0, 0, 0, 0.4);
-	-webkit-backdrop-filter: blur(16px);
-	backdrop-filter: blur(16px);
-	z-index: 998;
-	cursor: pointer;
-	visibility: hidden;
-}
-#fade.active {
-	visibility: visible;
-}
-#fade > .modal {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	border-radius: 5px;
-	cursor: default;
-	display: none;
-}
-#fade > .modal.active {
-	display: block;
-}
-
-#context {
-	position: fixed;
-	display: flex;
-	flex-direction: column;
-	padding: 4px;
-	border-radius: 2px;
-	transform: translate(-4px, -4px);
-	background-color: var(--context-background);
-	z-index: 999;
-}
-#context > .row {
-	padding: 5px 20px;
-	font-size: 12px;
-	cursor: pointer;
-}
-#context > .row:hover {
-	background-color: var(--context-elements);
-}
-#context > .row:hover:active {
-	background-color: var(--context-accents);
+	--block: #ffffff0d;
 }
 
 .panel > .content > .previews {
@@ -107,7 +24,7 @@ body {
 	padding: 4px;
 	margin: 4px;
 	cursor: pointer;
-	background-color: var(--block-background);
+	background-color: var(--block);
 	overflow: hidden;
 }
 .panel > .content > .previews > .block.focus {
@@ -164,7 +81,6 @@ body {
 	left: 0;
 	cursor: pointer;
 }
-
 #wall.crayon > .panel > .content > .desk > .light {
 	cursor: url("../IMG/cursor_pen.png"), auto;
 }

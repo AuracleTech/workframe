@@ -73,7 +73,7 @@ body.numb.resizing .panel {
 	width: 100%;
 }
 .panel.focus > .bar {
-	background-image: linear-gradient(to right, transparent, var(--focus-color));
+	background-color: var(--focus-color);
 }
 .panel > .bar > .grab {
 	min-width: 40px;

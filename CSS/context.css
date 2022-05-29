@@ -1,0 +1,27 @@
+:root {
+	--context-background: #292336;
+	--context-elements: #1f1b29;
+	--context-accents: #aced00;
+}
+
+#context {
+	position: fixed;
+	display: flex;
+	flex-direction: column;
+	padding: 4px;
+	border-radius: 2px;
+	transform: translate(-4px, -4px);
+	background-color: var(--context-background);
+	z-index: 999;
+}
+#context > .row {
+	padding: 5px 20px;
+	font-size: 12px;
+	cursor: pointer;
+}
+#context > .row:hover {
+	background-color: var(--context-elements);
+}
+#context > .row:hover:active {
+	background-color: var(--context-accents);
+}
