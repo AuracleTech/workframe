@@ -36,7 +36,7 @@
 	text-transform: uppercase;
 }
 .modal#hotkeys > #keyboard > .row > .key.used {
-	background-color: #63caf0;
+	background-color: #4ceca7;
 	color: #292336;
 	cursor: help;
 }

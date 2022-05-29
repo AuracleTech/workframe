@@ -152,7 +152,7 @@ const resize = (panel, size) => {
  * options.resizable : boolean
  * options.preservable : boolean
  */
-const new_panel = (options = { resizable: false, preservable: false }) => {
+const new_panel = (options = { resizable: true, preservable: false }) => {
 	const panel = document.createElement("div");
 	panel.bar = document.createElement("div");
 	panel.close = document.createElement("div");
@@ -191,7 +191,9 @@ const new_panel = (options = { resizable: false, preservable: false }) => {
 	resizeObserver.observe(panel);
 	panel.close.addEventListener("pointerup", (ev) => close(panel, ev));
 	panel.grab.addEventListener("pointerdown", (ev) => grab(panel, ev));
-	panel.grab.addEventListener("dblclick", () => maximize(panel));
+	if (panel.options.resizable)
+		panel.grab.addEventListener("dblclick", () => maximize(panel));
+	else panel.grab.addEventListener("dblclick", () => squish(panel));
 	panel.resize.addEventListener("click", (ev) => resizing(panel, ev));
 	panel.alternate.addEventListener("click", () => alternate(panel));
 	panel.squish.addEventListener("click", () => squish(panel));

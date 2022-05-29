@@ -6,7 +6,7 @@
 	--panel-min-width: 120px;
 	--panel-bar-height: 40px;
 	--content: #1f1b29;
-	--close-button-hover: #471526;
+	--close-button-hover: #b9283c;
 	--resize-color: #d187c5;
 }
 
@@ -32,10 +32,6 @@ html,
 
 body.numb {
 	pointer-events: none;
-}
-body.numb.resizing .panel {
-	outline: 1px solid var(--resize-color);
-	background-color: var(--resize-color);
 }
 
 *::-webkit-scrollbar {
@@ -69,9 +65,27 @@ body.numb.resizing .panel {
 	display: flex;
 	height: var(--panel-bar-height);
 	width: 100%;
+	background-size: 80px 100%;
+	background-repeat: no-repeat;
 }
-.panel.focus > .bar {
+.panel > .bar:before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 0;
+	height: 0;
+	border-left: 22px solid transparent;
+	border-right: 22px solid transparent;
+	border-top: 22px solid transparent;
+	pointer-events: none;
+}
+.panel.focus > .bar:before {
 	border-top-color: var(--focus-color);
+}
+body.numb.resizing .panel > .bar:before {
+	border-top-color: var(--resize-color);
 }
 .panel > .bar > .grab {
 	min-width: var(--panel-bar-height);
