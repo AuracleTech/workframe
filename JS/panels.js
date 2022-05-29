@@ -123,7 +123,12 @@ const focus = (panel) => {
 	wall.panels.forEach((p, i) => (p.style.zIndex = i));
 };
 const maximize = (panel) => {
-	resize(panel, { width: wall.clientWidth, height: wall.clientHeight });
+	if (
+		panel.clientWidth === wall.clientWidth &&
+		panel.clientHeight === wall.clientHeight
+	)
+		resize(panel);
+	else resize(panel, { width: wall.clientWidth, height: wall.clientHeight });
 };
 const reposition = (panel, positions) => {
 	if (!positions) positions = { top: panel.offsetTop, left: panel.offsetLeft };
@@ -155,7 +160,6 @@ const new_panel = (options = { resizable: false, preservable: false }) => {
 	panel.alternate = document.createElement("div");
 	panel.squish = document.createElement("div");
 	panel.content = document.createElement("div");
-
 	panel.options = options;
 
 	panel.close.title = "Close";
@@ -186,9 +190,7 @@ const new_panel = (options = { resizable: false, preservable: false }) => {
 	resizeObserver.observe(panel);
 	panel.close.addEventListener("pointerup", (ev) => close(panel, ev));
 	panel.grab.addEventListener("pointerdown", (ev) => grab(panel, ev));
-	if (panel.options.resizable)
-		panel.grab.addEventListener("dblclick", () => maximize(panel));
-	else panel.grab.addEventListener("dblclick", () => squish(panel));
+	panel.grab.addEventListener("dblclick", () => maximize(panel));
 	panel.resize.addEventListener("click", (ev) => resizing(panel, ev));
 	panel.alternate.addEventListener("click", () => alternate(panel));
 	panel.squish.addEventListener("click", () => squish(panel));
