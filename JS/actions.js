@@ -29,6 +29,7 @@ function art_new(width = 256, height = 64, data) {
 
 	layer_new(data);
 
+	// TODO : Zoom automatically based on size to maximize screen real estate
 	zoom_set(panel, 1);
 
 	panel.previews.addEventListener("contextmenu", (ev) => {
