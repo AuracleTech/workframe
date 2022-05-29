@@ -8,6 +8,7 @@ wall.addEventListener("contextmenu", (ev) => {
 wall.addEventListener("pointerdown", (ev) => {
 	ev.target === ev.currentTarget && focus();
 });
+addEventListener("resize", () => wall.panels.forEach((p) => reposition(p)));
 
 const close = (panel, ev) => {
 	ev.stopPropagation();
