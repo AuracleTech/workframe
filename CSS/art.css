@@ -2,7 +2,6 @@
 	--max-card-size: 120px;
 	--art-margin: 0px;
 	--layer-name: block;
-	--block: #ffffff0d;
 }
 
 .panel > .content > .previews {
@@ -21,14 +20,12 @@
 }
 .panel > .content > .previews > .block {
 	flex-shrink: 0;
-	padding: 4px;
-	margin: 4px;
+	border: 8px solid transparent;
 	cursor: pointer;
-	background-color: var(--block);
 	overflow: hidden;
 }
 .panel > .content > .previews > .block.focus {
-	background-color: var(--focus-color);
+	border-color: var(--focus-color);
 }
 .panel > .content > .previews > .block > .card {
 	display: block;
@@ -45,6 +42,10 @@
 	line-height: 24px;
 	text-align: center;
 	font-size: 12px;
+}
+.panel > .content > .previews > .block.focus > .name {
+	background-color: var(--focus-color);
+	color: #292336;
 }
 
 .panel > .content > .desk {

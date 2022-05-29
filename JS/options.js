@@ -1,7 +1,6 @@
 const s = document.body.style;
 const c = getComputedStyle(document.documentElement);
 
-// TODO : Hide 'set default' on option value change if value matches default value
 const get = (name) => c.getPropertyValue(name).trim();
 const set = (name, value) => s.setProperty(name, value);
 const OPTIONS = {
@@ -54,14 +53,13 @@ const init_modal = () => {
 				value = parseInt(value);
 				break;
 			case "boolean":
-				console.log(value);
 				value = value == "true" || value === true;
-				console.log(value);
 				break;
 		}
 		OPTIONS[option].change(value);
 
 		// Add reset button
+		// TODO : Hide 'set default' on option value change if value matches default value
 		const reset = document.createElement("div");
 		const element = document.createElement("input");
 		reset.classList = "reset";

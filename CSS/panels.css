@@ -1,11 +1,11 @@
 :root {
 	--scrollbar-background: #8080ad;
-	--scrollbar-size: 10px;
+	--scrollbar-size: 8px;
 	--wall: #151520;
 	--panel: #292336;
 	--panel-min-width: 120px;
-	--panel-min-height: 40px;
-	--content: #1f1b294d;
+	--panel-bar-height: 40px;
+	--content: #1f1b29;
 	--close-button-hover: #471526;
 	--resize-color: #d187c5;
 }
@@ -47,9 +47,8 @@ body.numb.resizing .panel {
 	background-color: var(--panel);
 }
 *::-webkit-scrollbar-thumb {
-	border: 1px solid var(--panel);
 	background-color: var(--scrollbar-background);
-	border-radius: 2px;
+	border-radius: 1px;
 }
 
 .panel {
@@ -60,7 +59,7 @@ body.numb.resizing .panel {
 	max-width: 100vw;
 	max-height: 100vh;
 	min-width: var(--panel-min-width);
-	min-height: var(--panel-min-height);
+	min-height: var(--panel-bar-height);
 	overflow: hidden;
 	background-color: var(--panel);
 	outline: 1px solid var(--wall);
@@ -68,14 +67,14 @@ body.numb.resizing .panel {
 .panel > .bar {
 	flex-shrink: 0;
 	display: flex;
-	height: 40px;
+	height: var(--panel-bar-height);
 	width: 100%;
 }
 .panel.focus > .bar {
-	background-color: var(--focus-color);
+	border-top-color: var(--focus-color);
 }
 .panel > .bar > .grab {
-	min-width: 40px;
+	min-width: var(--panel-bar-height);
 	flex-grow: 1;
 }
 /* TODO : Make Hold to close */
@@ -103,8 +102,8 @@ body.numb.resizing .panel {
 }
 .panel > .bar > .option {
 	cursor: pointer;
-	height: 40px;
-	width: 40px;
+	height: var(--panel-bar-height);
+	width: var(--panel-bar-height);
 	opacity: 0.5;
 	background-repeat: no-repeat;
 	background-image: url("../IMG/panels.png");
