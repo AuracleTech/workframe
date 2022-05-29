@@ -32,11 +32,6 @@ function art_new(width = 256, height = 64, data) {
 	// TODO : Zoom automatically based on size to maximize screen real estate
 	zoom_set(panel, 1);
 
-	panel.previews.addEventListener("contextmenu", (ev) => {
-		ev.preventDefault();
-		if (ev.target === ev.currentTarget) layer_focus(panel);
-	});
-
 	panel.light.addEventListener("pointerdown", (one) => {
 		if (
 			one.button !== 0 ||
@@ -152,7 +147,11 @@ const block_new = (panel, data) => {
 
 	// TODO : When panel is squished every value using clientHeight/Width will be wrong
 	// TODO : Stop hotkeys working when squished
-	block.addEventListener("click", () => layer_focus(panel, block));
+	block.addEventListener("click", () => {
+		if (panel.active_pair && panel.active_pair.block === block)
+			layer_focus(panel);
+		else layer_focus(panel, block);
+	});
 	// TODO : Context menu
 	block.addEventListener("contextmenu", generate_context);
 
@@ -177,19 +176,19 @@ const layer_rename = (panel, text, index) => {
 };
 const layer_focus = (panel, block) => {
 	for (const pair of panel.pairs) pair.block.classList.remove("focus");
-	if (!block) return (panel.focus_pair = null);
-	panel.focus_pair = panel.pairs.find((pair) => pair.block === block);
+	if (!block) return (panel.active_pair = null);
+	panel.active_pair = panel.pairs.find((pair) => pair.block === block);
 	block.classList.add("focus");
 };
 const layer_delete = () => {
 	const panel = wall.panels[wall.panels.length - 1];
 	if (!panel) return;
-	const pair = panel.focus_pair;
+	const pair = panel.active_pair;
 	if (!pair) return;
 	pair.block.remove();
 	pair.layer.remove();
 	panel.pairs.filter((pair) => pair.block !== pair.block);
-	panel.focus_pair = null;
+	panel.active_pair = null;
 };
 const layer_new = (data) => {
 	const panel = wall.panels[wall.panels.length - 1];

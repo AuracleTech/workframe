@@ -18,7 +18,7 @@ const temporary = () => {
 		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		const data = imageData.data;
 		const panel = ACTIONS.ART_NEW(16, 16, data);
-		ACTIONS.ZOOM(panel, 16);
+		ACTIONS.ZOOM(panel, 30);
 	};
 
 	// WIP message
