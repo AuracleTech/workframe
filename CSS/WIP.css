@@ -17,6 +17,7 @@
 	font-size: 22px;
 	color: #0d0d14;
 	text-transform: uppercase;
+	text-align: center;
 }
 #INFO span {
 	color: var(--focus-color);

@@ -2,6 +2,84 @@ import { new_panel, wall } from "./panels.js";
 import pixelator from "./pixelator.js";
 const style = getComputedStyle(document.body);
 
+function light_pointerdown(one, panel) {
+	if (
+		(one.button !== 0 && one.button !== 2 && one.button !== 1) ||
+		one.target.clientWidth < one.offsetX ||
+		one.target.clientHeight < one.offsetY
+	)
+		return;
+
+	if (one.button === 1) return selection_clear(panel);
+
+	const panel_selection = panel.selection;
+
+	const selection_limit = ({ x, y }, floor) => {
+		const rect = panel.light.getBoundingClientRect();
+		x = (x - rect.left) / panel.zoom;
+		y = (y - rect.top) / panel.zoom;
+		if (floor) {
+			x = Math.floor(x);
+			y = Math.floor(y);
+		} else {
+			x = Math.ceil(x);
+			y = Math.ceil(y);
+		}
+		x = Math.max(0, Math.min(panel.width, x));
+		y = Math.max(0, Math.min(panel.height, y));
+		return { x, y };
+	};
+	const selection_manage = (two) => {
+		panel.selection = panel_selection.slice();
+		const start = selection_limit(
+			{
+				x: Math.min(one.clientX, two.clientX),
+				y: Math.min(one.clientY, two.clientY),
+			},
+			true
+		);
+		const end = selection_limit(
+			{
+				x: Math.max(one.clientX, two.clientX),
+				y: Math.max(one.clientY, two.clientY),
+			},
+			false
+		);
+		return { start, end };
+	};
+
+	const selection = (two) => {
+		const { start, end } = selection_manage(two);
+		for (let x = start.x; x < end.x; x++)
+			for (let y = start.y; y < end.y; y++)
+				panel.selection[(x + y * panel.width) * 4 + 3] = 127;
+		light_draw(panel);
+	};
+	const deselection = (two) => {
+		const { start, end } = selection_manage(two);
+		for (let x = start.x; x < end.x; x++)
+			for (let y = start.y; y < end.y; y++)
+				panel.selection[(x + y * panel.width) * 4 + 3] = 0;
+		light_draw(panel);
+	};
+	const pointerup = () => {
+		if (one.button === 0) removeEventListener("pointermove", selection);
+		else removeEventListener("pointermove", deselection);
+		removeEventListener("pointerup", pointerup);
+	};
+	if (one.button === 0) {
+		addEventListener("pointermove", selection);
+		selection(one);
+	} else {
+		addEventListener("contextmenu", (ev) => ev.preventDefault(), {
+			once: true,
+		});
+		addEventListener("pointermove", deselection);
+		deselection(one);
+	}
+	addEventListener("pointerup", pointerup);
+}
+
 function art_new(width = 256, height = 64, data) {
 	const panel = new_panel();
 
@@ -32,65 +110,9 @@ function art_new(width = 256, height = 64, data) {
 	// TODO : Zoom automatically based on size to maximize screen real estate
 	zoom_set(panel, 1);
 
-	panel.light.addEventListener("pointerdown", (one) => {
-		if (
-			one.button !== 0 ||
-			one.target.clientWidth < one.offsetX ||
-			one.target.clientHeight < one.offsetY
-		)
-			return;
-
-		const limit = ({ x, y }, floor) => {
-			const rect = panel.light.getBoundingClientRect();
-			x = (x - rect.left) / panel.zoom;
-			y = (y - rect.top) / panel.zoom;
-			if (floor) {
-				x = Math.floor(x);
-				y = Math.floor(y);
-			} else {
-				x = Math.ceil(x);
-				y = Math.ceil(y);
-			}
-			x = Math.max(0, Math.min(panel.width, x));
-			y = Math.max(0, Math.min(panel.height, y));
-			return { x, y };
-		};
-		const pointermove_action = (two) => {
-			const start = limit(
-				{
-					x: Math.min(one.clientX, two.clientX),
-					y: Math.min(one.clientY, two.clientY),
-				},
-				true
-			);
-			const end = limit(
-				{
-					x: Math.max(one.clientX, two.clientX),
-					y: Math.max(one.clientY, two.clientY),
-				},
-				false
-			);
-			panel.selection.fill(0);
-			for (let x = start.x; x < end.x; x++) {
-				for (let y = start.y; y < end.y; y++) {
-					panel.selection[(y * panel.width + x) * 4] = 191;
-					panel.selection[(y * panel.width + x) * 4 + 1] = 127;
-					panel.selection[(y * panel.width + x) * 4 + 2] = 31;
-					panel.selection[(x + y * panel.width) * 4 + 3] = 127;
-				}
-			}
-			light_draw(panel);
-		};
-		const pointerup_action = () => {
-			removeEventListener("pointermove", pointermove_action);
-			removeEventListener("pointerup", pointerup_action);
-		};
-		addEventListener("pointermove", pointermove_action);
-		addEventListener("pointerup", pointerup_action);
-		// TODO : Better animation and system overall
-		panel.selection.fill(0);
-		light_draw(panel);
-	});
+	panel.light.addEventListener("pointerdown", (ev) =>
+		light_pointerdown(ev, panel)
+	);
 
 	panel.desk.addEventListener(
 		"wheel",
@@ -157,8 +179,8 @@ const block_new = (panel, data) => {
 	block.addEventListener("pointerdown", (ev) => {
 		if (ev.button !== 1) return;
 		const pair = panel.pairs.find((pair) => pair.block === block);
-		panel.art.classList.add("peek");
 		pair.layer.classList.add("peek");
+		panel.art.classList.add("peek");
 		addEventListener("pointerup", () => {
 			panel.pairs.forEach((pair) => pair.layer.classList.remove("peek"));
 			panel.art.classList.remove("peek");
@@ -217,6 +239,16 @@ const layer_new = (data) => {
 	layer_rename(panel, "Untitled");
 };
 
+function selection_clear(panel) {
+	panel.selection = new Uint8ClampedArray(panel.width * panel.height * 4);
+	for (let i = 0; i < panel.selection.length; i += 4) {
+		panel.selection[i] = 191;
+		panel.selection[i + 1] = 127;
+		panel.selection[i + 2] = 127;
+	}
+	light_draw(panel);
+}
+
 // TODO : Support custom context menu with actions names as arguments
 function generate_context(ev) {
 	// TODO : Maybe the context could be generated using hotkeys.js, that way no custom values are needed
@@ -260,7 +292,7 @@ function resize_light(panel) {
 function resize_art(panel, width, height) {
 	panel.width = width;
 	panel.height = height;
-	panel.selection = new Uint8ClampedArray(width * height * 4);
+	selection_clear(panel);
 	resize_light(panel);
 }
 function light_draw(panel) {
