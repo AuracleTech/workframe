@@ -61,6 +61,7 @@ const HOTKEYS = {
 	},
 };
 
+// TODO : Make hotkeys customizable
 const hotkeys = (ev) => {
 	const shift = ev.shiftKey;
 	const ctrl = ev.ctrlKey;

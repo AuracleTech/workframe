@@ -11,8 +11,8 @@ function light_pointerdown(one, panel) {
 		return;
 
 	if (one.button === 1) return selection_clear(panel);
-
-	const panel_selection = panel.selection;
+	if (!panel.selection) selection_init(panel);
+	const selection_clone = panel.selection;
 
 	const selection_limit = ({ x, y }, floor) => {
 		const rect = panel.light.getBoundingClientRect();
@@ -30,7 +30,7 @@ function light_pointerdown(one, panel) {
 		return { x, y };
 	};
 	const selection_manage = (two) => {
-		panel.selection = panel_selection.slice();
+		panel.selection = selection_clone.slice();
 		const start = selection_limit(
 			{
 				x: Math.min(one.clientX, two.clientX),
@@ -48,36 +48,54 @@ function light_pointerdown(one, panel) {
 		return { start, end };
 	};
 
-	const selection = (two) => {
+	const select = (two) => {
 		const { start, end } = selection_manage(two);
 		for (let x = start.x; x < end.x; x++)
 			for (let y = start.y; y < end.y; y++)
 				panel.selection[(x + y * panel.width) * 4 + 3] = 127;
-		light_draw(panel);
 	};
-	const deselection = (two) => {
+	const deselect = (two) => {
 		const { start, end } = selection_manage(two);
 		for (let x = start.x; x < end.x; x++)
 			for (let y = start.y; y < end.y; y++)
 				panel.selection[(x + y * panel.width) * 4 + 3] = 0;
-		light_draw(panel);
 	};
-	const pointerup = () => {
-		if (one.button === 0) removeEventListener("pointermove", selection);
-		else removeEventListener("pointermove", deselection);
+	// TODO : Prevent right click context menu when dragging right click outside canvas
+	const pointerup = (ev) => {
+		removeEventListener("pointermove", one.button === 0 ? select : deselect);
 		removeEventListener("pointerup", pointerup);
 	};
-	if (one.button === 0) {
-		addEventListener("pointermove", selection);
-		selection(one);
-	} else {
-		addEventListener("contextmenu", (ev) => ev.preventDefault(), {
-			once: true,
-		});
-		addEventListener("pointermove", deselection);
-		deselection(one);
-	}
+	addEventListener("pointermove", one.button === 0 ? select : deselect);
 	addEventListener("pointerup", pointerup);
+	new MouseEvent("mousemove", one);
+}
+function selection_init(panel) {
+	panel.selection = new Uint8ClampedArray(panel.width * panel.height * 4);
+	for (let i = 0; i < panel.selection.length; i += 4) {
+		panel.selection[i] = 76;
+		panel.selection[i + 1] = 236;
+		panel.selection[i + 2] = 167;
+	}
+	light_animate(panel);
+}
+function light_animate(panel, blink = true) {
+	console.log("animate");
+	if (blink)
+		panel.light_ctx.putImageData(
+			new ImageData(panel.selection, panel.width, panel.height),
+			0,
+			0
+		);
+	else panel.light_ctx.clearRect(0, 0, panel.width, panel.height);
+
+	panel.light_animation = requestAnimationFrame(() =>
+		light_animate(panel, !blink)
+	);
+}
+function selection_clear(panel) {
+	cancelAnimationFrame(panel.light_animation);
+	panel.selection = null;
+	panel.light_ctx.clearRect(0, 0, panel.width, panel.height);
 }
 
 function art_new(width = 256, height = 64, data) {
@@ -239,16 +257,6 @@ const layer_new = (data) => {
 	layer_rename(panel, "Untitled");
 };
 
-function selection_clear(panel) {
-	panel.selection = new Uint8ClampedArray(panel.width * panel.height * 4);
-	for (let i = 0; i < panel.selection.length; i += 4) {
-		panel.selection[i] = 191;
-		panel.selection[i + 1] = 127;
-		panel.selection[i + 2] = 127;
-	}
-	light_draw(panel);
-}
-
 // TODO : Support custom context menu with actions names as arguments
 function generate_context(ev) {
 	// TODO : Maybe the context could be generated using hotkeys.js, that way no custom values are needed
@@ -286,21 +294,11 @@ function resize_light(panel) {
 	panel.light.height = panel.height;
 	panel.light.style.width = `${panel.width * panel.zoom}px`;
 	panel.light.style.height = `${panel.height * panel.zoom}px`;
-	light_draw(panel);
 }
 // TODO : Multiple resize functions and algorithms
 function resize_art(panel, width, height) {
 	panel.width = width;
 	panel.height = height;
-	selection_clear(panel);
-	resize_light(panel);
-}
-function light_draw(panel) {
-	panel.light_ctx.putImageData(
-		new ImageData(panel.selection, panel.width, panel.height),
-		0,
-		0
-	);
 }
 
 function modal(id) {
