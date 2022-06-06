@@ -2,6 +2,10 @@ import { new_panel, wall } from "./panels.js";
 import pixelator from "./pixelator.js";
 const style = getComputedStyle(document.body);
 
+function select_init(panel) {
+	panel.select = new Array(panel.width * panel.height).fill(false);
+	light_draw(panel);
+}
 function light_pointerdown(one, panel) {
 	if (
 		(one.button !== 0 && one.button !== 2 && one.button !== 1) ||
@@ -10,11 +14,12 @@ function light_pointerdown(one, panel) {
 	)
 		return;
 
-	if (one.button === 1) return selection_clear(panel);
-	if (!panel.selection) selection_init(panel);
-	const selection_clone = panel.selection;
+	if (one.button === 1) return select_clear(panel);
+	const select = one.button === 0;
+	if (!panel.select) select_init(panel);
+	const select_dup = panel.select;
 
-	const selection_limit = ({ x, y }, floor) => {
+	const select_limit = ({ x, y }, floor) => {
 		const rect = panel.light.getBoundingClientRect();
 		x = (x - rect.left) / panel.zoom;
 		y = (y - rect.top) / panel.zoom;
@@ -29,72 +34,67 @@ function light_pointerdown(one, panel) {
 		y = Math.max(0, Math.min(panel.height, y));
 		return { x, y };
 	};
-	const selection_manage = (two) => {
-		panel.selection = selection_clone.slice();
-		const start = selection_limit(
+	const select_manage = (two) => {
+		panel.select = select_dup;
+		const start = select_limit(
 			{
 				x: Math.min(one.clientX, two.clientX),
 				y: Math.min(one.clientY, two.clientY),
 			},
 			true
 		);
-		const end = selection_limit(
+		const end = select_limit(
 			{
 				x: Math.max(one.clientX, two.clientX),
 				y: Math.max(one.clientY, two.clientY),
 			},
 			false
 		);
-		return { start, end };
-	};
-
-	const select = (two) => {
-		const { start, end } = selection_manage(two);
 		for (let x = start.x; x < end.x; x++)
 			for (let y = start.y; y < end.y; y++)
-				panel.selection[(x + y * panel.width) * 4 + 3] = 127;
+				panel.select[x + y * panel.width] = select;
 	};
-	const deselect = (two) => {
-		const { start, end } = selection_manage(two);
-		for (let x = start.x; x < end.x; x++)
-			for (let y = start.y; y < end.y; y++)
-				panel.selection[(x + y * panel.width) * 4 + 3] = 0;
+	const pointerup = () => {
+		removeEventListener("pointermove", select_manage);
 	};
-	// TODO : Prevent right click context menu when dragging right click outside canvas
-	const pointerup = (ev) => {
-		removeEventListener("pointermove", one.button === 0 ? select : deselect);
-		removeEventListener("pointerup", pointerup);
-	};
-	addEventListener("pointermove", one.button === 0 ? select : deselect);
-	addEventListener("pointerup", pointerup);
-	new MouseEvent("mousemove", one);
+	addEventListener("contextmenu", (ev) => ev.preventDefault(), { once: true });
+	addEventListener("pointermove", select_manage);
+	addEventListener("pointerup", pointerup, { once: true });
+	select_manage(one);
 }
-function selection_init(panel) {
-	panel.selection = new Uint8ClampedArray(panel.width * panel.height * 4);
-	for (let i = 0; i < panel.selection.length; i += 4) {
-		panel.selection[i] = 76;
-		panel.selection[i + 1] = 236;
-		panel.selection[i + 2] = 167;
-	}
-	light_animate(panel);
-}
-function light_animate(panel, blink = true) {
-	console.log("animate");
-	if (blink)
+const LIGHT_FPS = 20;
+function light_draw(panel, colored = true, last = 0) {
+	if (Date.now() - last >= 1000 / LIGHT_FPS) {
+		let select_array = new Uint8ClampedArray(panel.width * panel.height * 4);
+		if (colored) {
+			for (let i = 0; i < panel.select.length; i += 1) {
+				if (panel.select[i]) {
+					select_array[i * 4 + 0] = 63;
+					select_array[i * 4 + 1] = 127;
+					select_array[i * 4 + 2] = 191;
+					select_array[i * 4 + 3] = 127;
+				}
+			}
+		} else {
+			for (let i = 0; i < panel.select.length; i += 1)
+				if (panel.select[i]) select_array[i * 4 + 3] = 0;
+		}
 		panel.light_ctx.putImageData(
-			new ImageData(panel.selection, panel.width, panel.height),
+			new ImageData(select_array, panel.width, panel.height),
 			0,
 			0
 		);
-	else panel.light_ctx.clearRect(0, 0, panel.width, panel.height);
+		last = Date.now();
+		colored = !colored;
+	}
 
 	panel.light_animation = requestAnimationFrame(() =>
-		light_animate(panel, !blink)
+		light_draw(panel, colored, last)
 	);
 }
-function selection_clear(panel) {
+function select_clear(panel) {
 	cancelAnimationFrame(panel.light_animation);
-	panel.selection = null;
+	panel.select = null;
 	panel.light_ctx.clearRect(0, 0, panel.width, panel.height);
 }
 
