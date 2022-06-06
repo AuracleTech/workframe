@@ -35,7 +35,7 @@ function light_pointerdown(one, panel) {
 		return { x, y };
 	};
 	const select_manage = (two) => {
-		panel.select = select_dup;
+		panel.select = select_dup.slice();
 		const start = select_limit(
 			{
 				x: Math.min(one.clientX, two.clientX),
